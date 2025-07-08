@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Conversion Report - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+                <h2><i class="fas fa-percentage"></i> Conversion Report</h2>
+                <div>
+                    <a href="{{ url_for('admin.reports_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Reports
+                    </a>
+                    <button onclick="window.print()" class="btn btn-primary">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Header -->
+    <div class="print-only text-center mb-4">
+        <h2>Educational Services - Conversion Report</h2>
+        <p>Estimates to Completed Tasks Analysis</p>
+        <p>Generated on: {{ moment().format('MMMM Do YYYY, h:mm:ss a') }}</p>
+        <hr>
+    </div>
+
+    <!-- Conversion Overview -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-left-primary">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Overall Conversion Rate</div>
+                    <div class="h3 mb-0 font-weight-bold text-gray-800">
+                        {{ "%.1f"|format(conversion_data.overall_conversion_rate) }}%
+                    </div>
+                    <div class="text-muted small">
+                        {{ conversion_data.completed_requests }} of {{ conversion_data.total_requests }} total requests completed
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-left-success">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Estimate Conversion Rate</div>
+                    <div class="h3 mb-0 font-weight-bold text-gray-800">
+                        {{ "%.1f"|format(conversion_data.estimate_conversion_rate) }}%
+                    </div>
+                    <div class="text-muted small">
+                        {{ conversion_data.completed_estimated }} of {{ conversion_data.estimated_requests }} estimated requests completed
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversion Breakdown -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Overall Request Conversion</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="overallChart" width="100%" height="200"></canvas>
+                    <div class="mt-3">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-right">
+                                    <h5 class="text-success">{{ conversion_data.completed_requests }}</h5>
+                                    <small class="text-muted">Completed</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h5 class="text-warning">{{ conversion_data.total_requests - conversion_data.completed_requests }}</h5>
+                                <small class="text-muted">Pending/In Progress</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Estimated Request Conversion</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="estimateChart" width="100%" height="200"></canvas>
+                    <div class="mt-3">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-right">
+                                    <h5 class="text-success">{{ conversion_data.completed_estimated }}</h5>
+                                    <small class="text-muted">Completed</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h5 class="text-warning">{{ conversion_data.estimated_requests - conversion_data.completed_estimated }}</h5>
+                                <small class="text-muted">Pending/In Progress</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Detailed Statistics</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Metric</th>
+                            <th>Count</th>
+                            <th>Percentage</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Total Requests</strong></td>
+                            <td>{{ conversion_data.total_requests }}</td>
+                            <td>100.0%</td>
+                            <td>All service requests in the system</td>
+                        </tr>
+                        <tr class="table-success">
+                            <td><strong>Completed Requests</strong></td>
+                            <td>{{ conversion_data.completed_requests }}</td>
+                            <td>{{ "%.1f"|format(conversion_data.overall_conversion_rate) }}%</td>
+                            <td>Requests that have been completed</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td><strong>Outstanding Requests</strong></td>
+                            <td>{{ conversion_data.total_requests - conversion_data.completed_requests }}</td>
+                            <td>{{ "%.1f"|format(100 - conversion_data.overall_conversion_rate) }}%</td>
+                            <td>Requests still pending or in progress</td>
+                        </tr>
+                        <tr class="table-info">
+                            <td><strong>Requests with Estimates</strong></td>
+                            <td>{{ conversion_data.estimated_requests }}</td>
+                            <td>{{ "%.1f"|format((conversion_data.estimated_requests / conversion_data.total_requests) * 100) if conversion_data.total_requests > 0 else 0 }}%</td>
+                            <td>Requests that have received cost estimates</td>
+                        </tr>
+                        <tr class="table-success">
+                            <td><strong>Completed Estimated Requests</strong></td>
+                            <td>{{ conversion_data.completed_estimated }}</td>
+                            <td>{{ "%.1f"|format(conversion_data.estimate_conversion_rate) }}%</td>
+                            <td>Estimated requests that were completed</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Analysis -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Performance Analysis</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Conversion Performance:</h6>
+                            {% set overall_rate = conversion_data.overall_conversion_rate %}
+                            {% if overall_rate >= 80 %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i> <strong>Excellent</strong> - Conversion rate above 80%
+                                </div>
+                            {% elif overall_rate >= 60 %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> <strong>Good</strong> - Conversion rate between 60-80%
+                                </div>
+                            {% elif overall_rate >= 40 %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> <strong>Fair</strong> - Conversion rate between 40-60%
+                                </div>
+                            {% else %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-times-circle"></i> <strong>Needs Improvement</strong> - Conversion rate below 40%
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Estimate Effectiveness:</h6>
+                            {% set estimate_rate = conversion_data.estimate_conversion_rate %}
+                            {% if estimate_rate >= 85 %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i> <strong>Excellent</strong> - Estimates are highly effective
+                                </div>
+                            {% elif estimate_rate >= 70 %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> <strong>Good</strong> - Estimates are effective
+                                </div>
+                            {% elif estimate_rate >= 50 %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> <strong>Fair</strong> - Estimates need improvement
+                                </div>
+                            {% else %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-times-circle"></i> <strong>Poor</strong> - Estimate process needs review
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Overall Conversion Chart
+    const overallCtx = document.getElementById('overallChart').getContext('2d');
+    new Chart(overallCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Outstanding'],
+            datasets: [{
+                data: [{{ conversion_data.completed_requests }}, {{ conversion_data.total_requests - conversion_data.completed_requests }}],
+                backgroundColor: ['#28a745', '#ffc107'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: '{{ "%.1f"|format(conversion_data.overall_conversion_rate) }}% Overall Conversion'
+                }
+            }
+        }
+    });
+
+    // Estimate Conversion Chart
+    const estimateCtx = document.getElementById('estimateChart').getContext('2d');
+    new Chart(estimateCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Outstanding'],
+            datasets: [{
+                data: [{{ conversion_data.completed_estimated }}, {{ conversion_data.estimated_requests - conversion_data.completed_estimated }}],
+                backgroundColor: ['#28a745', '#ffc107'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: '{{ "%.1f"|format(conversion_data.estimate_conversion_rate) }}% Estimate Conversion'
+                }
+            }
+        }
+    });
+});
+</script>
+
+<style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-only {
+        display: block !important;
+    }
+    
+    .card {
+        border: 1px solid #dee2e6 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+    
+    body {
+        font-size: 12px;
+    }
+    
+    h2, h3, h4, h5, h6 {
+        color: #000 !important;
+    }
+    
+    canvas {
+        display: none !important;
+    }
+}
+
+.print-only {
+    display: none;
+}
+
+.border-left-primary {
+    border-left: 0.25rem solid #007bff !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #28a745 !important;
+}
+</style>
+{% endblock %}

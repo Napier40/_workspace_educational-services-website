@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+                <h2><i class="fas fa-trophy"></i> {{ title }}</h2>
+                <div>
+                    <a href="{{ url_for('admin.reports_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Reports
+                    </a>
+                    <button onclick="window.print()" class="btn btn-primary">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                    <a href="{{ url_for('admin.export_report', report_type='customers', type=report_type) }}" class="btn btn-success">
+                        <i class="fas fa-download"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Header -->
+    <div class="print-only text-center mb-4">
+        <h2>Educational Services - {{ title }}</h2>
+        <p>Generated on: {{ moment().format('MMMM Do YYYY, h:mm:ss a') }}</p>
+        <hr>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="row mb-4 no-print">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="form-inline">
+                        <div class="form-group mr-3">
+                            <label for="type" class="mr-2">Report Type:</label>
+                            <select name="type" id="type" class="form-control">
+                                <option value="conversions" {% if report_type == 'conversions' %}selected{% endif %}>Top by Conversion Rate</option>
+                                <option value="requests" {% if report_type == 'requests' %}selected{% endif %}>Top by Request Volume</option>
+                            </select>
+                        </div>
+                        <div class="form-group mr-3">
+                            <label for="limit" class="mr-2">Show Top:</label>
+                            <select name="limit" id="limit" class="form-control">
+                                <option value="5" {% if limit == 5 %}selected{% endif %}>5</option>
+                                <option value="10" {% if limit == 10 %}selected{% endif %}>10</option>
+                                <option value="20" {% if limit == 20 %}selected{% endif %}>20</option>
+                                <option value="50" {% if limit == 50 %}selected{% endif %}>50</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Apply Filter
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Customers Table -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{ title }} (Top {{ limit }})</h6>
+        </div>
+        <div class="card-body">
+            {% if customers_data %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Rank</th>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th>Total Requests</th>
+                            <th>Completed</th>
+                            {% if report_type == 'conversions' %}
+                            <th>Conversion Rate</th>
+                            {% endif %}
+                            <th>Total Value</th>
+                            <th>Member Since</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if report_type == 'conversions' %}
+                            {% for customer_data in customers_data %}
+                            <tr>
+                                <td>
+                                    <span class="badge badge-{% if loop.index <= 3 %}warning{% else %}secondary{% endif %}">
+                                        #{{ loop.index }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ customer_data.customer.first_name }} {{ customer_data.customer.last_name }}</strong>
+                                    <br><small class="text-muted">@{{ customer_data.customer.username }}</small>
+                                </td>
+                                <td>
+                                    {{ customer_data.customer.email }}
+                                    {% if customer_data.customer.phone %}
+                                    <br><small class="text-muted">{{ customer_data.customer.phone }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ customer_data.total_requests }}</td>
+                                <td>
+                                    <span class="badge badge-success">{{ customer_data.completed_requests }}</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-{% if customer_data.conversion_rate >= 80 %}success{% elif customer_data.conversion_rate >= 60 %}info{% elif customer_data.conversion_rate >= 40 %}warning{% else %}danger{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ customer_data.conversion_rate }}%"
+                                             aria-valuenow="{{ customer_data.conversion_rate }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ "%.1f"|format(customer_data.conversion_rate) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="font-weight-bold text-success">${{ "%.2f"|format(customer_data.total_value) }}</td>
+                                <td>{{ customer_data.customer.created_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            {% for customer, request_count, total_value, completed_count in customers_data %}
+                            <tr>
+                                <td>
+                                    <span class="badge badge-{% if loop.index <= 3 %}warning{% else %}secondary{% endif %}">
+                                        #{{ loop.index }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ customer.first_name }} {{ customer.last_name }}</strong>
+                                    <br><small class="text-muted">@{{ customer.username }}</small>
+                                </td>
+                                <td>
+                                    {{ customer.email }}
+                                    {% if customer.phone %}
+                                    <br><small class="text-muted">{{ customer.phone }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-primary">{{ request_count }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-success">{{ completed_count or 0 }}</span>
+                                </td>
+                                <td class="font-weight-bold text-success">${{ "%.2f"|format(total_value or 0) }}</td>
+                                <td>{{ customer.created_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h4>No Customer Data</h4>
+                <p class="text-muted">No customers found with the selected criteria.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Customer Insights -->
+    {% if customers_data %}
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Customer Insights</h6>
+                </div>
+                <div class="card-body">
+                    {% if report_type == 'conversions' %}
+                        {% set top_customer = customers_data[0] %}
+                        <h6>Top Performer:</h6>
+                        <p><strong>{{ top_customer.customer.first_name }} {{ top_customer.customer.last_name }}</strong></p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-percentage text-success"></i> {{ "%.1f"|format(top_customer.conversion_rate) }}% conversion rate</li>
+                            <li><i class="fas fa-tasks text-info"></i> {{ top_customer.completed_requests }}/{{ top_customer.total_requests }} requests completed</li>
+                            <li><i class="fas fa-dollar-sign text-success"></i> ${{ "%.2f"|format(top_customer.total_value) }} total value</li>
+                        </ul>
+                        
+                        {% set avg_conversion = (customers_data | sum(attribute='conversion_rate')) / customers_data|length %}
+                        <h6 class="mt-3">Average Conversion Rate:</h6>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ avg_conversion }}%">
+                                {{ "%.1f"|format(avg_conversion) }}%
+                            </div>
+                        </div>
+                    {% else %}
+                        {% set top_customer = customers_data[0][0] %}
+                        {% set top_requests = customers_data[0][1] %}
+                        <h6>Most Active Customer:</h6>
+                        <p><strong>{{ top_customer.first_name }} {{ top_customer.last_name }}</strong></p>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-tasks text-primary"></i> {{ top_requests }} total requests</li>
+                            <li><i class="fas fa-check text-success"></i> {{ customers_data[0][3] or 0 }} completed</li>
+                            <li><i class="fas fa-dollar-sign text-success"></i> ${{ "%.2f"|format(customers_data[0][2] or 0) }} total value</li>
+                        </ul>
+                        
+                        {% set total_requests = customers_data | sum(attribute='1') %}
+                        <h6 class="mt-3">Total Requests from Top {{ limit }}:</h6>
+                        <h4 class="text-primary">{{ total_requests }}</h4>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-success">Revenue Analysis</h6>
+                </div>
+                <div class="card-body">
+                    {% if report_type == 'conversions' %}
+                        {% set total_revenue = customers_data | sum(attribute='total_value') %}
+                        {% set total_completed = customers_data | sum(attribute='completed_requests') %}
+                    {% else %}
+                        {% set total_revenue = customers_data | sum(attribute='2') %}
+                        {% set total_completed = customers_data | sum(attribute='3') %}
+                    {% endif %}
+                    
+                    <h6>Total Revenue from Top {{ limit }}:</h6>
+                    <h4 class="text-success">${{ "%.2f"|format(total_revenue) }}</h4>
+                    
+                    <h6 class="mt-3">Average Revenue per Customer:</h6>
+                    <h5 class="text-info">
+                        {% if customers_data|length > 0 %}
+                            ${{ "%.2f"|format(total_revenue / customers_data|length) }}
+                        {% else %}
+                            $0.00
+                        {% endif %}
+                    </h5>
+                    
+                    <h6 class="mt-3">Total Completed Requests:</h6>
+                    <h5 class="text-primary">{{ total_completed }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-only {
+        display: block !important;
+    }
+    
+    .card {
+        border: 1px solid #dee2e6 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+    
+    .badge {
+        border: 1px solid #000 !important;
+    }
+    
+    .progress {
+        border: 1px solid #000 !important;
+    }
+    
+    body {
+        font-size: 12px;
+    }
+    
+    h2, h3, h4, h5, h6 {
+        color: #000 !important;
+    }
+}
+
+.print-only {
+    display: none;
+}
+</style>
+{% endblock %}

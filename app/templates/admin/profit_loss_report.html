@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Profit & Loss Report') }} - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="bi bi-file-earmark-text me-2"></i>{{ _('Profit & Loss Report') }}
+            </h1>
+            <p class="text-muted">{{ _('Annual financial performance summary') }} - {{ year }}</p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <button onclick="window.print()" class="btn btn-outline-primary">
+                    <i class="bi bi-printer me-1"></i>{{ _('Print Report') }}
+                </button>
+                <a href="{{ url_for('admin.financial_dashboard') }}" class="btn btn-outline-success">
+                    <i class="bi bi-graph-up me-1"></i>{{ _('Dashboard') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- P&L Statement -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calculator me-2"></i>{{ _('Profit & Loss Statement') }} - {{ year }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Revenue Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-success border-bottom pb-2">{{ _('REVENUE') }}</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="ps-3">{{ _('Service Revenue') }}</td>
+                                    <td class="text-end fw-bold text-success">${{ "%.2f"|format(total_income) }}</td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td class="fw-bold">{{ _('TOTAL REVENUE') }}</td>
+                                    <td class="text-end fw-bold">${{ "%.2f"|format(gross_profit) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Expenses Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-danger border-bottom pb-2">{{ _('EXPENSES') }}</h6>
+                            <table class="table table-sm">
+                                {% for category in expense_categories %}
+                                <tr>
+                                    <td class="ps-3">{{ category.name }}</td>
+                                    <td class="text-end">${{ "%.2f"|format(category.total_amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="table-danger">
+                                    <td class="fw-bold">{{ _('TOTAL EXPENSES') }}</td>
+                                    <td class="text-end fw-bold">${{ "%.2f"|format(total_expenses) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Net Income Section -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">{{ _('NET INCOME') }}</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td class="ps-3">{{ _('Income Before Tax') }}</td>
+                                    <td class="text-end fw-bold {% if net_income >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ "%.2f"|format(net_income) }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-3">{{ _('Tax Liability (9%)') }}</td>
+                                    <td class="text-end text-warning">${{ "%.2f"|format(tax_liability) }}</td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td class="fw-bold">{{ _('NET INCOME AFTER TAX') }}</td>
+                                    <td class="text-end fw-bold {% if (net_income - tax_liability) >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ "%.2f"|format(net_income - tax_liability) }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Financial Ratios -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-info border-bottom pb-2">{{ _('FINANCIAL RATIOS') }}</h6>
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <div class="h5 mb-0 {% if profit_margin >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                {{ "%.1f"|format(profit_margin) }}%
+                                            </div>
+                                            <small class="text-muted">{{ _('Profit Margin') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <div class="h5 mb-0 text-primary">
+                                                {{ "%.1f"|format((total_expenses / total_income * 100) if total_income > 0 else 0) }}%
+                                            </div>
+                                            <small class="text-muted">{{ _('Expense Ratio') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <div class="h5 mb-0 text-warning">
+                                                {{ "%.1f"|format((tax_liability / net_income * 100) if net_income > 0 else 0) }}%
+                                            </div>
+                                            <small class="text-muted">{{ _('Tax Rate') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body py-2">
+                                            <div class="h5 mb-0 text-info">
+                                                {{ expense_categories|length }}
+                                            </div>
+                                            <small class="text-muted">{{ _('Expense Categories') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <small>
+                        {{ _('Report generated on') }} {{ moment().format('MMMM DD, YYYY [at] h:mm A') }}
+                        <br>
+                        {{ _('Educational Services Financial Management System') }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .navbar, .card-footer { display: none !important; }
+    .card { border: none !important; box-shadow: none !important; }
+    .container-fluid { padding: 0 !important; }
+}
+</style>
+{% endblock %}
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>

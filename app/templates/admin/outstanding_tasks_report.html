@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Outstanding Tasks Report - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+                <h2><i class="fas fa-tasks"></i> Outstanding Tasks Report</h2>
+                <div>
+                    <a href="{{ url_for('admin.reports_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Reports
+                    </a>
+                    <button onclick="window.print()" class="btn btn-primary">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                    <a href="{{ url_for('admin.export_report', report_type='outstanding') }}" class="btn btn-success">
+                        <i class="fas fa-download"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Header -->
+    <div class="print-only text-center mb-4">
+        <h2>Educational Services - Outstanding Tasks Report</h2>
+        <p>Generated on: {{ moment().format('MMMM Do YYYY, h:mm:ss a') }}</p>
+        <p>Ordered by Priority (Highest to Lowest)</p>
+        <hr>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-warning">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Outstanding</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ requests|length }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-danger">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Overdue</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        {{ requests|selectattr('is_estimated_time_overdue')|list|length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">In Progress</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        {{ requests|selectattr('status', 'equalto', 'in_progress')|list|length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-primary">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Pending</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                        {{ requests|selectattr('status', 'equalto', 'pending')|list|length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Outstanding Tasks Table -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Outstanding Tasks (Priority Order)</h6>
+        </div>
+        <div class="card-body">
+            {% if requests %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Priority</th>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Customer</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Total Price</th>
+                            <th>Estimated Time</th>
+                            <th>Overdue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in requests %}
+                        <tr class="{% if request.is_estimated_time_overdue() %}table-danger{% elif request.status == 'in_progress' %}table-warning{% endif %}">
+                            <td>
+                                <span class="badge badge-{% if request.get_priority_score() > 500 %}danger{% elif request.get_priority_score() > 300 %}warning{% else %}info{% endif %}">
+                                    {{ request.get_priority_score() }}
+                                </span>
+                            </td>
+                            <td>{{ request.id }}</td>
+                            <td>
+                                <strong>{{ request.title }}</strong>
+                                {% if request.description %}
+                                <br><small class="text-muted">{{ request.description[:100] }}{% if request.description|length > 100 %}...{% endif %}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if request.customer %}
+                                    {{ request.customer.first_name }} {{ request.customer.last_name }}
+                                    <br><small class="text-muted">{{ request.customer.email }}</small>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-{% if request.status == 'pending' %}secondary{% elif request.status == 'in_progress' %}primary{% elif request.status == 'under_review' %}info{% else %}success{% endif %}">
+                                    {{ request.status.replace('_', ' ').title() }}
+                                </span>
+                            </td>
+                            <td>{{ request.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% if request.total_price %}
+                                    ${{ "%.2f"|format(request.total_price) }}
+                                {% else %}
+                                    <span class="text-muted">Not set</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ request.get_formatted_estimated_time() }}</td>
+                            <td>
+                                {% if request.is_estimated_time_overdue() %}
+                                    <span class="badge badge-danger">Yes</span>
+                                {% else %}
+                                    <span class="badge badge-success">No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h4>No Outstanding Tasks</h4>
+                <p class="text-muted">All requests have been completed!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Priority Legend -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">Priority Scoring Legend</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Priority Factors:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-circle text-danger"></i> <strong>Overdue:</strong> +500 points</li>
+                                <li><i class="fas fa-circle text-warning"></i> <strong>In Progress:</strong> +200 points</li>
+                                <li><i class="fas fa-circle text-info"></i> <strong>Pending:</strong> +100 points</li>
+                                <li><i class="fas fa-circle text-secondary"></i> <strong>Age:</strong> +10 points per day (max 200)</li>
+                                <li><i class="fas fa-circle text-success"></i> <strong>Cost:</strong> +1 point per $10 (max 100)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Priority Levels:</h6>
+                            <ul class="list-unstyled">
+                                <li><span class="badge badge-danger">500+</span> Critical Priority</li>
+                                <li><span class="badge badge-warning">300-499</span> High Priority</li>
+                                <li><span class="badge badge-info">100-299</span> Normal Priority</li>
+                                <li><span class="badge badge-secondary">0-99</span> Low Priority</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-only {
+        display: block !important;
+    }
+    
+    .card {
+        border: 1px solid #dee2e6 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+    
+    .badge {
+        border: 1px solid #000 !important;
+    }
+    
+    body {
+        font-size: 12px;
+    }
+    
+    h2, h3, h4, h5, h6 {
+        color: #000 !important;
+    }
+}
+
+.print-only {
+    display: none;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #ffc107 !important;
+}
+
+.border-left-danger {
+    border-left: 0.25rem solid #dc3545 !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #17a2b8 !important;
+}
+
+.border-left-primary {
+    border-left: 0.25rem solid #007bff !important;
+}
+</style>
+{% endblock %}

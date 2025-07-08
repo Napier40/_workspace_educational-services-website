@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if pricing %}Edit Pricing Plan{% else %}New Pricing Plan{% endif %} - Admin
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">
+                        {% if pricing %}
+                            Edit Pricing Plan: {{ pricing.plan_name }}
+                        {% else %}
+                            Create New Pricing Plan
+                        {% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">Configure pricing plan details for the services page</p>
+                </div>
+                <a href="{{ url_for('admin.service_pricing') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Pricing
+                </a>
+            </div>
+
+            <!-- Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="row">
+                            <!-- Basic Information -->
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Basic Information</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="plan_name" class="form-label">Plan Name *</label>
+                                    <input type="text" class="form-control" id="plan_name" name="plan_name" 
+                                           value="{{ pricing.plan_name if pricing else '' }}" required>
+                                    <div class="form-text">e.g., Basic, Premium, Enterprise</div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-8">
+                                        <div class="mb-3">
+                                            <label for="price" class="form-label">Price *</label>
+                                            <input type="text" class="form-control" id="price" name="price" 
+                                                   value="{{ pricing.price if pricing else '' }}" required>
+                                            <div class="form-text">e.g., $25, $40, Custom, Free</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="mb-3">
+                                            <label for="price_period" class="form-label">Period</label>
+                                            <input type="text" class="form-control" id="price_period" name="price_period" 
+                                                   value="{{ pricing.price_period if pricing else '/hour' }}">
+                                            <div class="form-text">e.g., /hour, /month</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3">{{ pricing.description if pricing else '' }}</textarea>
+                                    <div class="form-text">Brief description of the plan</div>
+                                </div>
+                            </div>
+
+                            <!-- Display Settings -->
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Display Settings</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="display_order" class="form-label">Display Order</label>
+                                    <input type="number" class="form-control" id="display_order" name="display_order" 
+                                           value="{{ pricing.display_order if pricing else 0 }}" min="0">
+                                    <div class="form-text">Lower numbers appear first (0, 1, 2, etc.)</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                               {% if not pricing or pricing.is_active %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_active">
+                                            Active Plan
+                                        </label>
+                                        <div class="form-text">Only active plans appear on the services page</div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_popular" name="is_popular" 
+                                               {% if pricing and pricing.is_popular %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_popular">
+                                            Mark as "Most Popular"
+                                        </label>
+                                        <div class="form-text">Adds a "Most Popular" badge to the plan</div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-8">
+                                        <div class="mb-3">
+                                            <label for="button_text" class="form-label">Button Text</label>
+                                            <input type="text" class="form-control" id="button_text" name="button_text" 
+                                                   value="{{ pricing.button_text if pricing else 'Get Started' }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="button_link" class="form-label">Custom Button Link</label>
+                                    <input type="url" class="form-control" id="button_link" name="button_link" 
+                                           value="{{ pricing.button_link if pricing else '' }}" 
+                                           placeholder="https://example.com or mailto:sales@company.com">
+                                    <div class="form-text">Leave empty to use default registration/request links</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Features Section -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h6 class="text-muted mb-3">Plan Features</h6>
+                                <div class="mb-3">
+                                    <label for="features" class="form-label">Features List</label>
+                                    <textarea class="form-control" id="features" name="features" rows="8" 
+                                              placeholder="Enter one feature per line, e.g.:&#10;One-on-one tutoring&#10;Flexible scheduling&#10;Progress tracking&#10;Email support">{{ features_text }}</textarea>
+                                    <div class="form-text">Enter one feature per line. Each feature will appear with a checkmark icon.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('admin.service_pricing') }}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-circle me-2"></i>Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        {% if pricing %}Update Plan{% else %}Create Plan{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-eye me-2"></i>Preview
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm" id="preview-card">
+                                <div class="card-body p-4 text-center">
+                                    <h5 class="card-title" id="preview-name">{{ pricing.plan_name if pricing else 'Plan Name' }}</h5>
+                                    <div class="display-6 fw-bold text-primary mb-3">
+                                        <span id="preview-price">{{ pricing.price if pricing else '$25' }}</span>
+                                        <small class="fs-6 text-muted" id="preview-period">{{ pricing.price_period if pricing else '/hour' }}</small>
+                                    </div>
+                                    <p class="text-muted mb-4" id="preview-description">
+                                        {{ pricing.description if pricing else 'Plan description will appear here' }}
+                                    </p>
+                                    <div id="preview-features">
+                                        <!-- Features will be populated by JavaScript -->
+                                    </div>
+                                    <button class="btn btn-outline-primary w-100" id="preview-button">
+                                        {{ pricing.button_text if pricing else 'Get Started' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const previewCard = document.getElementById('preview-card');
+    
+    function updatePreview() {
+        // Update plan name
+        const planName = document.getElementById('plan_name').value || 'Plan Name';
+        document.getElementById('preview-name').textContent = planName;
+        
+        // Update price
+        const price = document.getElementById('price').value || '$25';
+        document.getElementById('preview-price').textContent = price;
+        
+        // Update period
+        const period = document.getElementById('price_period').value || '/hour';
+        document.getElementById('preview-period').textContent = period;
+        
+        // Update description
+        const description = document.getElementById('description').value || 'Plan description will appear here';
+        document.getElementById('preview-description').textContent = description;
+        
+        // Update button text
+        const buttonText = document.getElementById('button_text').value || 'Get Started';
+        document.getElementById('preview-button').textContent = buttonText;
+        
+        // Update features
+        const featuresText = document.getElementById('features').value;
+        const featuresContainer = document.getElementById('preview-features');
+        
+        if (featuresText.trim()) {
+            const features = featuresText.split('\n').filter(f => f.trim());
+            let featuresHtml = '<ul class="list-unstyled mb-4">';
+            features.forEach(feature => {
+                if (feature.trim()) {
+                    featuresHtml += `<li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>${feature.trim()}</li>`;
+                }
+            });
+            featuresHtml += '</ul>';
+            featuresContainer.innerHTML = featuresHtml;
+        } else {
+            featuresContainer.innerHTML = '<p class="text-muted small">Features will appear here</p>';
+        }
+        
+        // Update popular badge
+        const isPopular = document.getElementById('is_popular').checked;
+        let cardHeader = previewCard.querySelector('.card-header');
+        
+        if (isPopular && !cardHeader) {
+            cardHeader = document.createElement('div');
+            cardHeader.className = 'card-header bg-primary text-white text-center';
+            cardHeader.innerHTML = '<span class="badge bg-light text-primary">Most Popular</span>';
+            previewCard.insertBefore(cardHeader, previewCard.firstChild);
+            previewCard.classList.add('border-primary');
+        } else if (!isPopular && cardHeader) {
+            cardHeader.remove();
+            previewCard.classList.remove('border-primary');
+        }
+    }
+    
+    // Add event listeners for live preview
+    ['plan_name', 'price', 'price_period', 'description', 'button_text', 'features'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updatePreview);
+    });
+    
+    document.getElementById('is_popular').addEventListener('change', updatePreview);
+    
+    // Initial preview update
+    updatePreview();
+});
+</script>
+{% endblock %}

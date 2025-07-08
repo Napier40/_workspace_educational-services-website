@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Service Requests - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="bi bi-list-task me-2"></i>Service Requests Management
+            </h1>
+            <p class="text-muted">Manage and track all customer service requests</p>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="mb-2">Filter by Status:</h6>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('admin.requests') }}" 
+                                   class="btn btn-sm {% if status_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                    All
+                                </a>
+                                <a href="{{ url_for('admin.requests', status='pending') }}" 
+                                   class="btn btn-sm {% if status_filter == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                                    Pending
+                                </a>
+                                <a href="{{ url_for('admin.requests', status='in_progress') }}" 
+                                   class="btn btn-sm {% if status_filter == 'in_progress' %}btn-info{% else %}btn-outline-info{% endif %}">
+                                    In Progress
+                                </a>
+                                <a href="{{ url_for('admin.requests', status='completed') }}" 
+                                   class="btn btn-sm {% if status_filter == 'completed' %}btn-success{% else %}btn-outline-success{% endif %}">
+                                    Completed
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <small class="text-muted">
+                                Showing {{ requests.items|length }} of {{ requests.total }} requests
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Requests Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    {% if requests.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Request Title</th>
+                                        <th>Customer</th>
+                                        <th>Service Type</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Estimated Time</th>
+                                        <th>Pricing</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in requests.items %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-light text-dark">#{{ request.id }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold">{{ request.title[:40] }}{% if request.title|length > 40 %}...{% endif %}</div>
+                                            <small class="text-muted">{{ request.description[:60] }}{% if request.description|length > 60 %}...{% endif %}</small>
+                                        </td>
+                                        <td>
+                                            <div>{{ request.customer.first_name }} {{ request.customer.last_name }}</div>
+                                            <small class="text-muted">{{ request.customer.email }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ request.service_type }}</span>
+                                        </td>
+                                        <td>
+                                            {% if request.priority == 'high' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>High
+                                                </span>
+                                            {% elif request.priority == 'medium' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-dash-circle me-1"></i>Medium
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i>Low
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.status == 'pending' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-clock me-1"></i>Pending
+                                                </span>
+                                            {% elif request.status == 'in_progress' %}
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-arrow-repeat me-1"></i>In Progress
+                                                </span>
+                                            {% elif request.status == 'completed' %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i>Completed
+                                                </span>
+                                            {% elif request.status == 'cancelled' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancelled
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.estimated_response_days or request.estimated_response_hours %}
+                                                <div class="fw-bold">{{ request.get_formatted_estimated_time() }}</div>
+                                                {% if request.is_estimated_time_overdue() %}
+                                                    <small class="text-danger">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>Overdue
+                                                    </small>
+                                                {% elif request.response_deadline %}
+                                                    <small class="text-muted">
+                                                        Due: {{ request.response_deadline.strftime('%m/%d/%Y') }}
+                                                    </small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">Not set</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.estimated_hours and request.hourly_rate %}
+                                                <div class="text-success fw-bold">{{ request.get_formatted_price() }}</div>
+                                                <small class="text-muted">
+                                                    {{ request.estimated_hours }}h @ {{ request.get_formatted_rate() }}
+                                                    {% if request.pricing_approved %}
+                                                        <i class="bi bi-check-circle text-success ms-1" title="Approved"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-clock text-warning ms-1" title="Pending Approval"></i>
+                                                    {% endif %}
+                                                </small>
+                                            {% else %}
+                                                <span class="text-muted">Not set</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>{{ request.created_at.strftime('%m/%d/%Y') }}</div>
+                                            <small class="text-muted">{{ request.created_at.strftime('%I:%M %p') }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('admin.request_detail', id=request.id) }}" 
+                                                   class="btn btn-outline-primary" title="View Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if requests.pages > 1 %}
+                        <div class="card-footer bg-white border-top">
+                            <nav aria-label="Requests pagination">
+                                <ul class="pagination pagination-sm justify-content-center mb-0">
+                                    {% if requests.has_prev %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.requests', page=requests.prev_num, status=status_filter) }}">
+                                                <i class="bi bi-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for page_num in requests.iter_pages() %}
+                                        {% if page_num %}
+                                            {% if page_num != requests.page %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('admin.requests', page=page_num, status=status_filter) }}">
+                                                        {{ page_num }}
+                                                    </a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if requests.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.requests', page=requests.next_num, status=status_filter) }}">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="text-muted mt-3">No requests found</h4>
+                            <p class="text-muted">
+                                {% if status_filter != 'all' %}
+                                    No {{ status_filter }} requests at the moment.
+                                {% else %}
+                                    No service requests have been submitted yet.
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

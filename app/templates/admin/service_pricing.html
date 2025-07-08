@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Service Pricing Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">Service Pricing Management</h2>
+                    <p class="text-muted mb-0">Manage pricing plans displayed on the services page</p>
+                </div>
+                <a href="{{ url_for('admin.new_service_pricing') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Plan
+                </a>
+            </div>
+
+            <!-- Pricing Plans Cards -->
+            <div class="row g-4">
+                {% for pricing in pricing_plans %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="card h-100 border-0 shadow-sm {% if pricing.is_popular %}border-primary{% endif %}">
+                        {% if pricing.is_popular %}
+                        <div class="card-header bg-primary text-white text-center">
+                            <span class="badge bg-light text-primary">Most Popular</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="card-body p-4">
+                            <!-- Plan Header -->
+                            <div class="text-center mb-3">
+                                <h5 class="card-title">{{ pricing.plan_name }}</h5>
+                                <div class="display-6 fw-bold text-primary mb-2">
+                                    {{ pricing.price }}
+                                    {% if pricing.price_period %}
+                                        <small class="fs-6 text-muted">{{ pricing.price_period }}</small>
+                                    {% endif %}
+                                </div>
+                                {% if pricing.description %}
+                                <p class="text-muted small">{{ pricing.description }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Features List -->
+                            {% if pricing.features %}
+                            <ul class="list-unstyled mb-4">
+                                {% for feature in pricing.get_features_list() %}
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>{{ feature }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+
+                            <!-- Status Badges -->
+                            <div class="mb-3">
+                                {% if pricing.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                                
+                                {% if pricing.is_popular %}
+                                    <span class="badge bg-primary">Popular</span>
+                                {% endif %}
+                                
+                                <span class="badge bg-info">Order: {{ pricing.display_order }}</span>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('admin.edit_service_pricing', id=pricing.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil me-1"></i>Edit Plan
+                                </a>
+                                
+                                <button type="button" class="btn btn-outline-danger btn-sm" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#deleteModal{{ pricing.id }}">
+                                    <i class="bi bi-trash me-1"></i>Delete Plan
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Plan Details Footer -->
+                        <div class="card-footer bg-light text-muted small">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Button:</strong> {{ pricing.button_text }}
+                                </div>
+                                <div class="col-6">
+                                    <strong>Updated:</strong> {{ pricing.updated_at.strftime('%m/%d/%Y') }}
+                                </div>
+                            </div>
+                            {% if pricing.button_link %}
+                            <div class="mt-1">
+                                <strong>Link:</strong> 
+                                <a href="{{ pricing.button_link }}" target="_blank" class="text-decoration-none">
+                                    {{ pricing.button_link[:50] }}{% if pricing.button_link|length > 50 %}...{% endif %}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Confirmation Modal -->
+                <div class="modal fade" id="deleteModal{{ pricing.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirm Delete</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to delete the <strong>"{{ pricing.plan_name }}"</strong> pricing plan?</p>
+                                <p class="text-danger small">This action cannot be undone.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <form method="POST" action="{{ url_for('admin.delete_service_pricing', id=pricing.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-danger">Delete Plan</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Empty State -->
+            {% if not pricing_plans %}
+            <div class="text-center py-5">
+                <i class="bi bi-currency-dollar display-1 text-muted"></i>
+                <h4 class="mt-3">No Pricing Plans</h4>
+                <p class="text-muted">Create your first pricing plan to get started.</p>
+                <a href="{{ url_for('admin.new_service_pricing') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Add First Plan
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Help Section -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="bi bi-info-circle me-2"></i>Pricing Management Tips
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled small">
+                                        <li><strong>Display Order:</strong> Lower numbers appear first</li>
+                                        <li><strong>Popular Badge:</strong> Only one plan should be marked as popular</li>
+                                        <li><strong>Active Status:</strong> Only active plans appear on the services page</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled small">
+                                        <li><strong>Features:</strong> Enter one feature per line</li>
+                                        <li><strong>Custom Links:</strong> Use full URLs (https://...)</li>
+                                        <li><strong>Price Format:</strong> Use any format (e.g., $25, Custom, Free)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

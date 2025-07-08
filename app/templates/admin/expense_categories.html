@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Expense Categories') }} - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-tags me-2"></i>{{ _('Expense Categories') }}
+                    </h1>
+                    <p class="text-muted">{{ _('Manage business expense categories for better organization') }}</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                        <i class="bi bi-plus-circle me-1"></i>{{ _('Add Category') }}
+                    </button>
+                    <a href="{{ url_for('admin.expense_management') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>{{ _('Back to Expenses') }}
+                    </a>
+                </div>
+            </div>
+
+            <!-- Categories List -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-list me-2"></i>{{ _('All Categories') }}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if categories %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{{ _('Category Name') }}</th>
+                                    <th>{{ _('Description') }}</th>
+                                    <th>{{ _('Tax Deductible') }}</th>
+                                    <th>{{ _('Status') }}</th>
+                                    <th>{{ _('Created') }}</th>
+                                    <th>{{ _('Actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ category.name }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="text-muted">
+                                            {{ category.description[:100] }}{% if category.description|length > 100 %}...{% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if category.is_tax_deductible %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>{{ _('Yes') }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-x-circle me-1"></i>{{ _('No') }}
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if category.is_active %}
+                                        <span class="badge bg-success">{{ _('Active') }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ _('Inactive') }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ category.created_at.strftime('%m/%d/%Y') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary btn-sm" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editCategoryModal{{ category.id }}">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            {% if category.is_active %}
+                                            <button class="btn btn-outline-warning btn-sm"
+                                                    onclick="toggleCategory({{ category.id }}, false)">
+                                                <i class="bi bi-pause"></i>
+                                            </button>
+                                            {% else %}
+                                            <button class="btn btn-outline-success btn-sm"
+                                                    onclick="toggleCategory({{ category.id }}, true)">
+                                                <i class="bi bi-play"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Edit Category Modal -->
+                                <div class="modal fade" id="editCategoryModal{{ category.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">{{ _('Edit Category') }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('admin.edit_expense_category', category_id=category.id) }}">
+                                                <div class="modal-body">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="edit_name{{ category.id }}" class="form-label">{{ _('Category Name') }}</label>
+                                                        <input type="text" class="form-control" id="edit_name{{ category.id }}" 
+                                                               name="name" value="{{ category.name }}" maxlength="100" required>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="edit_description{{ category.id }}" class="form-label">{{ _('Description') }}</label>
+                                                        <textarea class="form-control" id="edit_description{{ category.id }}" 
+                                                                  name="description" rows="3">{{ category.description }}</textarea>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" 
+                                                                   id="edit_is_tax_deductible{{ category.id }}" 
+                                                                   name="is_tax_deductible" 
+                                                                   {% if category.is_tax_deductible %}checked{% endif %}>
+                                                            <label class="form-check-label" for="edit_is_tax_deductible{{ category.id }}">
+                                                                {{ _('Tax deductible by default') }}
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                                                    <button type="submit" class="btn btn-primary">{{ _('Update Category') }}</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-tags fs-1 text-muted d-block mb-3"></i>
+                        <h5 class="text-muted">{{ _('No categories found') }}</h5>
+                        <p class="text-muted">{{ _('Create your first expense category to get started.') }}</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                            <i class="bi bi-plus-circle me-2"></i>{{ _('Add First Category') }}
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Add New Category') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.add_expense_category') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">{{ _('Category Name') }} <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" maxlength="100" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">{{ _('Description') }}</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" 
+                                  placeholder="{{ _('Brief description of this expense category...') }}"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_tax_deductible" 
+                                   name="is_tax_deductible" checked>
+                            <label class="form-check-label" for="is_tax_deductible">
+                                {{ _('Tax deductible by default') }}
+                            </label>
+                        </div>
+                        <div class="form-text">
+                            {{ _('Expenses in this category will be marked as tax deductible by default.') }}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('Add Category') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleCategory(categoryId, activate) {
+    const action = activate ? 'activate' : 'deactivate';
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/admin/finances/expense-categories/${categoryId}/${action}`;
+    
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = 'csrf_token';
+    csrfToken.value = '{{ csrf_token() }}';
+    
+    form.appendChild(csrfToken);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>

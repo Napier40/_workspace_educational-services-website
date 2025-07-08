@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Dashboard - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="bi bi-speedometer2 me-2"></i>My Dashboard
+            </h1>
+            <p class="text-muted">Welcome back, {{ current_user.first_name }}! Here's an overview of your requests.</p>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-list-task fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Total Requests</div>
+                            <div class="h4 mb-0">{{ total_requests }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-clock fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Pending</div>
+                            <div class="h4 mb-0">{{ pending_requests }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-check-circle fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Completed</div>
+                            <div class="h4 mb-0">{{ completed_requests }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-credit-card fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Outstanding Payments</div>
+                            <div class="h4 mb-0">{{ (pending_payments|length + unpaid_requests|length) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-star-fill fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Current Plan</div>
+                            <div class="h5 mb-0">{{ current_user.get_plan_name() }}</div>
+                            <div class="text-muted small">{{ current_user.get_plan_price() }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <a href="{{ url_for('customer.my_plan') }}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-gear me-1"></i>Manage Plan
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Recent Requests -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history me-2"></i>Recent Requests
+                        </h5>
+                        <a href="{{ url_for('customer.my_requests') }}" class="btn btn-sm btn-outline-primary">
+                            View All <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if my_requests %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Request</th>
+                                        <th>Service Type</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Estimated Time</th>
+                                        <th>Pricing</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in my_requests %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">{{ request.title[:40] }}{% if request.title|length > 40 %}...{% endif %}</div>
+                                            <small class="text-muted">{{ request.description[:50] }}{% if request.description|length > 50 %}...{% endif %}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ request.service_type }}</span>
+                                        </td>
+                                        <td>
+                                            {% if request.status == 'pending' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-clock me-1"></i>Pending
+                                                </span>
+                                            {% elif request.status == 'in_progress' %}
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-arrow-repeat me-1"></i>In Progress
+                                                </span>
+                                            {% elif request.status == 'completed' %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i>Completed
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ request.status.title() }}</span>
+                                            {% endif %}
+                                            
+                                            {% if request.total_price and request.total_price > 0 %}
+                                                <br><small class="mt-1">
+                                                    {% if request.payment_status == 'paid' %}
+                                                        <span class="badge bg-success">Paid</span>
+                                                    {% elif request.payment_status == 'pending' %}
+                                                        <span class="badge bg-warning">Payment Pending</span>
+                                                    {% elif request.payment_status == 'unpaid' %}
+                                                        <span class="badge bg-danger">Payment Required</span>
+                                                    {% endif %}
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.priority == 'high' %}
+                                                <span class="badge bg-danger">High</span>
+                                            {% elif request.priority == 'medium' %}
+                                                <span class="badge bg-warning">Medium</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Low</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.estimated_response_days or request.estimated_response_hours %}
+                                                <div class="fw-bold">{{ request.get_formatted_estimated_time() }}</div>
+                                                {% if request.is_estimated_time_overdue() %}
+                                                    <small class="text-danger">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>Overdue
+                                                    </small>
+                                                {% elif request.response_deadline %}
+                                                    <small class="text-muted">
+                                                        Due: {{ request.response_deadline.strftime('%m/%d') }}
+                                                    </small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">Not set</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.estimated_hours and request.hourly_rate %}
+                                                <div class="fw-bold text-success">{{ request.get_formatted_price() }}</div>
+                                                {% if not request.pricing_approved %}
+                                                    <small class="text-warning">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>Approval needed
+                                                    </small>
+                                                {% else %}
+                                                    <small class="text-success">
+                                                        <i class="bi bi-check-circle me-1"></i>Approved
+                                                    </small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ request.created_at.strftime('%m/%d/%Y') }}</td>
+                                        <td>
+                                            <a href="{{ url_for('customer.request_detail', id=request.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3">No service requests yet</p>
+                            <a href="{{ url_for('customer.new_request') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Create Your First Request
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('customer.new_request') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>New Request
+                        </a>
+                        <a href="{{ url_for('customer.my_requests') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-list-ul me-2"></i>View All Requests
+                        </a>
+                        <a href="{{ url_for('customer.profile') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-person-gear me-2"></i>Update Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Account Info -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-circle me-2"></i>Account Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                             style="width: 50px; height: 50px;">
+                            <i class="bi bi-person fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="fw-semibold">{{ current_user.first_name }} {{ current_user.last_name }}</div>
+                            <small class="text-muted">{{ current_user.email }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Member Since</span>
+                        <span>{{ current_user.created_at.strftime('%B %Y') }}</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Account Status</span>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Help & Support -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-question-circle me-2"></i>Need Help?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Have questions about our services or need assistance with your requests?
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('main.services') }}" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-info-circle me-2"></i>View Services
+                        </a>
+                        <a href="mailto:support@eduservices.com" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-envelope me-2"></i>Contact Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

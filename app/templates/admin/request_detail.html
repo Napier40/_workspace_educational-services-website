@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Request #{{ request.id }} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.requests') }}">Requests</a></li>
+                    <li class="breadcrumb-item active">Request #{{ request.id }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-file-text me-2"></i>{{ request.title }}
+            </h1>
+            <p class="text-muted">Request ID: #{{ request.id }}</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Request Details -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Request Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Service Type</h6>
+                            <span class="badge bg-secondary fs-6">{{ request.service_type }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Priority</h6>
+                            {% if request.priority == 'high' %}
+                                <span class="badge bg-danger fs-6">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>High Priority
+                                </span>
+                            {% elif request.priority == 'medium' %}
+                                <span class="badge bg-warning fs-6">
+                                    <i class="bi bi-dash-circle me-1"></i>Medium Priority
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success fs-6">
+                                    <i class="bi bi-check-circle me-1"></i>Low Priority
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Description</h6>
+                        <div class="bg-light p-3 rounded">
+                            {{ request.description|nl2br }}
+                        </div>
+                    </div>
+                    
+                    {% if request.notes %}
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Admin Notes</h6>
+                        <div class="bg-info bg-opacity-10 p-3 rounded border-start border-info border-4">
+                            {{ request.notes|nl2br }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Created</h6>
+                            <p class="mb-0">
+                                <i class="bi bi-calendar me-2"></i>{{ request.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Last Updated</h6>
+                            <p class="mb-0">
+                                <i class="bi bi-clock me-2"></i>{{ request.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Status & Actions -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gear me-2"></i>Status & Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Current Status</h6>
+                        {% if request.status == 'pending' %}
+                            <span class="badge bg-warning fs-6">
+                                <i class="bi bi-clock me-1"></i>Pending
+                            </span>
+                        {% elif request.status == 'in_progress' %}
+                            <span class="badge bg-info fs-6">
+                                <i class="bi bi-arrow-repeat me-1"></i>In Progress
+                            </span>
+                        {% elif request.status == 'completed' %}
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-circle me-1"></i>Completed
+                            </span>
+                        {% elif request.status == 'cancelled' %}
+                            <span class="badge bg-danger fs-6">
+                                <i class="bi bi-x-circle me-1"></i>Cancelled
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if request.assigned_admin %}
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Assigned To</h6>
+                        <p class="mb-0">
+                            <i class="bi bi-person-check me-2"></i>{{ request.assigned_admin.first_name }} {{ request.assigned_admin.last_name }}
+                        </p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Update Form -->
+                    <form method="POST" action="{{ url_for('admin.update_request', id=request.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Update Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="pending" {% if request.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="in_progress" {% if request.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="completed" {% if request.status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="cancelled" {% if request.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">Update Priority</label>
+                            <select class="form-select" id="priority" name="priority" required>
+                                <option value="low" {% if request.priority == 'low' %}selected{% endif %}>Low</option>
+                                <option value="medium" {% if request.priority == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="high" {% if request.priority == 'high' %}selected{% endif %}>High</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Estimated Time Section -->
+                        <hr class="my-4">
+                        <h6 class="mb-3">
+                            <i class="bi bi-clock me-2"></i>Estimated Time Management
+                        </h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="estimated_response_days" class="form-label">Estimated Days</label>
+                                <select class="form-select" id="estimated_response_days" name="estimated_response_days">
+                                    <option value="">Select days...</option>
+                                    {% for day in range(0, 31) %}
+                                        <option value="{{ day }}" {% if request.estimated_response_days == day %}selected{% endif %}>
+                                            {{ day }} day{% if day != 1 %}s{% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="estimated_response_hours" class="form-label">Additional Hours</label>
+                                <select class="form-select" id="estimated_response_hours" name="estimated_response_hours">
+                                    <option value="">Select hours...</option>
+                                    {% for hour in range(0, 24) %}
+                                        <option value="{{ hour }}" {% if request.estimated_response_hours == hour %}selected{% endif %}>
+                                            {{ hour }} hour{% if hour != 1 %}s{% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="response_time_notes" class="form-label">Estimated Time Notes</label>
+                            <textarea class="form-control" id="response_time_notes" name="response_time_notes" rows="2" 
+                                      placeholder="Add notes about estimated timeline...">{{ request.response_time_notes or '' }}</textarea>
+                        </div>
+                        
+                        {% if request.estimated_response_days or request.estimated_response_hours %}
+                        <div class="alert alert-info">
+                            <strong>Estimated Time: {{ request.get_formatted_estimated_time() }}</strong>
+                            {% if request.response_deadline %}
+                                <br><small>Deadline: {{ request.response_deadline.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Pricing Section -->
+                        <hr class="my-4">
+                        <h6 class="mb-3">
+                            <i class="bi bi-currency-dollar me-2"></i>Service Pricing
+                        </h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="estimated_hours" class="form-label">Estimated Hours</label>
+                                <select class="form-select" id="estimated_hours" name="estimated_hours">
+                                    <option value="">Select hours...</option>
+                                    {% for i in range(1, 21) %}
+                                        {% set half_hour = i * 0.5 %}
+                                        <option value="{{ half_hour }}" {% if request.estimated_hours == half_hour %}selected{% endif %}>
+                                            {{ half_hour }} hour{% if half_hour != 1 %}s{% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="hourly_rate" class="form-label">Hourly Rate ($)</label>
+                                <input type="number" class="form-control" id="hourly_rate" name="hourly_rate" 
+                                       step="0.01" min="0" value="{{ request.hourly_rate or '' }}" 
+                                       placeholder="0.00">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="pricing_notes" class="form-label">Pricing Notes</label>
+                            <textarea class="form-control" id="pricing_notes" name="pricing_notes" rows="2" 
+                                      placeholder="Add notes about pricing...">{{ request.pricing_notes or '' }}</textarea>
+                        </div>
+                        
+                        {% if request.estimated_hours and request.hourly_rate %}
+                        <div class="alert alert-info">
+                            <strong>Total Price: ${{ "%.2f"|format(request.estimated_hours * request.hourly_rate) }}</strong>
+                        </div>
+                        {% endif %}
+                        
+                        <hr class="my-4">
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">General Admin Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                      placeholder="Add notes about this request...">{{ request.notes or '' }}</textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-lg me-2"></i>Update Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Customer Information -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person me-2"></i>Customer Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-1">Name</h6>
+                        <p class="mb-0">{{ request.customer.first_name }} {{ request.customer.last_name }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-1">Email</h6>
+                        <p class="mb-0">
+                            <a href="mailto:{{ request.customer.email }}" class="text-decoration-none">
+                                <i class="bi bi-envelope me-2"></i>{{ request.customer.email }}
+                            </a>
+                        </p>
+                    </div>
+                    
+                    {% if request.customer.phone %}
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-1">Phone</h6>
+                        <p class="mb-0">
+                            <a href="tel:{{ request.customer.phone }}" class="text-decoration-none">
+                                <i class="bi bi-telephone me-2"></i>{{ request.customer.phone }}
+                            </a>
+                        </p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-0">
+                        <h6 class="text-muted mb-1">Member Since</h6>
+                        <p class="mb-0">
+                            <i class="bi bi-calendar me-2"></i>{{ request.customer.created_at.strftime('%B %Y') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Auto-save form data
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('select, textarea');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            // You could implement auto-save functionality here
+            console.log('Field changed:', this.name, this.value);
+        });
+    });
+});
+</script>
+{% endblock %}

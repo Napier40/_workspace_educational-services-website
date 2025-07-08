@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Make Payment - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-credit-card me-2"></i>Make Payment
+                    </h1>
+                    <p class="text-muted">Submit a payment for your account</p>
+                </div>
+                <a href="{{ url_for('customer.payments') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Payments
+                </a>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- Service Request Selection -->
+                        <div class="mb-4">
+                            <label for="service_request_id" class="form-label">
+                                <i class="bi bi-list-task me-1"></i>Payment For (Optional)
+                            </label>
+                            <select class="form-select" id="service_request_id" name="service_request_id">
+                                <option value="">General Account Payment</option>
+                                {% for service_req in outstanding_requests %}
+                                <option value="{{ service_req.id }}" 
+                                        data-outstanding="{{ service_req.get_outstanding_amount() }}"
+                                        {% if service_req.id == request.args.get('request_id', type=int) %}selected{% endif %}>
+                                    {{ service_req.title }} - Outstanding: {{ service_req.get_formatted_outstanding_amount() }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Select a specific request to pay for, or leave blank for a general account payment.
+                            </div>
+                        </div>
+
+                        <!-- Payment Amount -->
+                        <div class="mb-4">
+                            <label for="amount" class="form-label">
+                                <i class="bi bi-currency-dollar me-1"></i>Payment Amount <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       step="0.01" min="0.01" required>
+                            </div>
+                            <div id="amount-help" class="form-text">
+                                Enter the amount you wish to pay.
+                            </div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="mb-4">
+                            <label for="payment_method" class="form-label">
+                                <i class="bi bi-credit-card-2-front me-1"></i>Payment Method <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                <option value="">Select Payment Method</option>
+                                <option value="credit_card">Credit Card</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="paypal">PayPal</option>
+                                <option value="check">Check</option>
+                                <option value="cash">Cash</option>
+                            </select>
+                        </div>
+
+                        <!-- Payment Reference -->
+                        <div class="mb-4">
+                            <label for="payment_reference" class="form-label">
+                                <i class="bi bi-hash me-1"></i>Payment Reference
+                            </label>
+                            <input type="text" class="form-control" id="payment_reference" name="payment_reference" 
+                                   maxlength="200" placeholder="Transaction ID, Check Number, etc.">
+                            <div class="form-text">
+                                <span id="reference-help">Optional reference information for your payment.</span>
+                            </div>
+                        </div>
+
+                        <!-- Customer Notes -->
+                        <div class="mb-4">
+                            <label for="customer_notes" class="form-label">
+                                <i class="bi bi-chat-text me-1"></i>Notes (Optional)
+                            </label>
+                            <textarea class="form-control" id="customer_notes" name="customer_notes" 
+                                      rows="3" maxlength="500" 
+                                      placeholder="Any additional information about this payment..."></textarea>
+                            <div class="form-text">
+                                Add any notes or comments about this payment.
+                            </div>
+                        </div>
+
+                        <!-- Payment Instructions -->
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>Payment Instructions</h6>
+                            <ul class="mb-0">
+                                <li><strong>Credit Card:</strong> Payment will be processed securely</li>
+                                <li><strong>Bank Transfer:</strong> Please include the transaction reference number</li>
+                                <li><strong>PayPal:</strong> Use your PayPal account email as reference</li>
+                                <li><strong>Check:</strong> Please include the check number</li>
+                                <li><strong>Cash:</strong> Payment must be made in person</li>
+                            </ul>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send me-2"></i>Submit Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Payment Process Info -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6><i class="bi bi-question-circle me-2"></i>What happens next?</h6>
+                    <ol class="mb-0">
+                        <li>Your payment submission will be reviewed by our admin team</li>
+                        <li>You'll receive confirmation once the payment is approved</li>
+                        <li>Your account balance will be updated automatically</li>
+                        <li>You can track the status in your payment history</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const serviceRequestSelect = document.getElementById('service_request_id');
+    const amountInput = document.getElementById('amount');
+    const amountHelp = document.getElementById('amount-help');
+    const paymentMethodSelect = document.getElementById('payment_method');
+    const referenceInput = document.getElementById('payment_reference');
+    const referenceHelp = document.getElementById('reference-help');
+
+    // Update amount suggestion when service request is selected
+    serviceRequestSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value && selectedOption.dataset.outstanding) {
+            const outstanding = parseFloat(selectedOption.dataset.outstanding);
+            amountInput.value = outstanding.toFixed(2);
+            amountHelp.textContent = `Outstanding amount for this request: $${outstanding.toFixed(2)}`;
+            amountHelp.className = 'form-text text-info';
+        } else {
+            amountInput.value = '';
+            amountHelp.textContent = 'Enter the amount you wish to pay.';
+            amountHelp.className = 'form-text';
+        }
+    });
+
+    // Update reference field requirements based on payment method
+    paymentMethodSelect.addEventListener('change', function() {
+        const method = this.value;
+        if (method === 'bank_transfer') {
+            referenceInput.required = true;
+            referenceInput.placeholder = 'Transaction ID or Reference Number';
+            referenceHelp.innerHTML = '<strong>Required:</strong> Please provide the bank transfer reference number.';
+            referenceHelp.className = 'form-text text-warning';
+        } else if (method === 'check') {
+            referenceInput.required = true;
+            referenceInput.placeholder = 'Check Number';
+            referenceHelp.innerHTML = '<strong>Required:</strong> Please provide the check number.';
+            referenceHelp.className = 'form-text text-warning';
+        } else if (method === 'paypal') {
+            referenceInput.required = false;
+            referenceInput.placeholder = 'PayPal Transaction ID (optional)';
+            referenceHelp.textContent = 'PayPal transaction ID if available.';
+            referenceHelp.className = 'form-text';
+        } else {
+            referenceInput.required = false;
+            referenceInput.placeholder = 'Transaction ID, Reference, etc.';
+            referenceHelp.textContent = 'Optional reference information for your payment.';
+            referenceHelp.className = 'form-text';
+        }
+    });
+
+    // Pre-select request if passed in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestId = urlParams.get('request_id');
+    if (requestId) {
+        serviceRequestSelect.value = requestId;
+        serviceRequestSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

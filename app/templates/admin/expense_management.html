@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Expense Management') }} - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="bi bi-receipt me-2"></i>{{ _('Expense Management') }}
+            </h1>
+            <p class="text-muted">{{ _('Track and manage business expenses for tax calculations') }}</p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <a href="{{ url_for('admin.add_expense') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>{{ _('Add Expense') }}
+                </a>
+                <a href="{{ url_for('admin.expense_categories') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-tags me-1"></i>{{ _('Categories') }}
+                </a>
+                <a href="{{ url_for('admin.financial_dashboard') }}" class="btn btn-outline-success">
+                    <i class="bi bi-graph-up me-1"></i>{{ _('Dashboard') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="bi bi-receipt fs-6"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">{{ _('Total Expenses') }}</div>
+                            <div class="h5 mb-0">${{ "%.2f"|format(total_expenses) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="bi bi-calendar-month fs-6"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">{{ _('This Month') }}</div>
+                            <div class="h5 mb-0">${{ "%.2f"|format(monthly_expenses) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="bi bi-list fs-6"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">{{ _('Total Records') }}</div>
+                            <div class="h5 mb-0">{{ expenses.total }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="category" class="form-label">{{ _('Filter by Category') }}</label>
+                            <select class="form-select" id="category" name="category" onchange="this.form.submit()">
+                                <option value="all" {% if category_filter == 'all' %}selected{% endif %}>{{ _('All Categories') }}</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if category_filter == category.id|string %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('admin.expense_management') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-clockwise me-1"></i>{{ _('Reset Filters') }}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expenses Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-table me-2"></i>{{ _('Expense Records') }}
+                        {% if category_filter != 'all' %}
+                        <span class="badge bg-primary ms-2">
+                            {{ categories|selectattr('id', 'equalto', category_filter|int)|first|attr('name') if categories|selectattr('id', 'equalto', category_filter|int)|first else 'Unknown' }}
+                        </span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if expenses.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{{ _('Date') }}</th>
+                                    <th>{{ _('Description') }}</th>
+                                    <th>{{ _('Category') }}</th>
+                                    <th>{{ _('Amount') }}</th>
+                                    <th>{{ _('Tax Deductible') }}</th>
+                                    <th>{{ _('Added By') }}</th>
+                                    <th>{{ _('Actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in expenses.items %}
+                                <tr>
+                                    <td>
+                                        <span class="fw-medium">{{ expense.get_formatted_date() }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-medium">{{ expense.description }}</div>
+                                        {% if expense.receipt_filename %}
+                                        <small class="text-muted">
+                                            <i class="bi bi-paperclip me-1"></i>{{ _('Receipt attached') }}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">{{ expense.category.name }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-danger">{{ expense.get_formatted_amount() }}</span>
+                                    </td>
+                                    <td>
+                                        {% if expense.is_tax_deductible %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>{{ _('Yes') }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-x-circle me-1"></i>{{ _('No') }}
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ expense.created_by.first_name }} {{ expense.created_by.last_name }}
+                                            <br>
+                                            {{ expense.created_at.strftime('%m/%d/%Y') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary btn-sm" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editExpenseModal{{ expense.id }}">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm"
+                                                    onclick="confirmDelete({{ expense.id }}, '{{ expense.description }}')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if expenses.pages > 1 %}
+                    <div class="card-footer bg-light">
+                        <nav aria-label="Expense pagination">
+                            <ul class="pagination pagination-sm mb-0 justify-content-center">
+                                {% if expenses.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.expense_management', page=expenses.prev_num, category=category_filter) }}">
+                                        {{ _('Previous') }}
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for page_num in expenses.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != expenses.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.expense_management', page=page_num, category=category_filter) }}">
+                                                {{ page_num }}
+                                            </a>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                        {% endif %}
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if expenses.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.expense_management', page=expenses.next_num, category=category_filter) }}">
+                                        {{ _('Next') }}
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-receipt fs-1 text-muted d-block mb-3"></i>
+                        <h5 class="text-muted">{{ _('No expenses found') }}</h5>
+                        <p class="text-muted">
+                            {% if category_filter != 'all' %}
+                            {{ _('No expenses found in the selected category.') }}
+                            {% else %}
+                            {{ _('Start tracking your business expenses for better financial management.') }}
+                            {% endif %}
+                        </p>
+                        <a href="{{ url_for('admin.add_expense') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>{{ _('Add First Expense') }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Confirm Delete') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ _('Are you sure you want to delete this expense?') }}</p>
+                <p class="fw-bold" id="deleteExpenseName"></p>
+                <p class="text-muted small">{{ _('This action cannot be undone.') }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <form method="POST" id="deleteForm" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="_method" value="DELETE"/>
+                    <button type="submit" class="btn btn-danger">{{ _('Delete Expense') }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(expenseId, expenseName) {
+    document.getElementById('deleteExpenseName').textContent = expenseName;
+    document.getElementById('deleteForm').action = '/admin/finances/expenses/' + expenseId + '/delete';
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>

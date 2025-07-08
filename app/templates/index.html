@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Educational Services{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Excellence in Educational Services</h1>
+                <p class="lead mb-4">
+                    We provide comprehensive educational support services to help students achieve their academic goals. 
+                    From tutoring to academic consulting, we're here to support your educational journey.
+                </p>
+                {% if not current_user.is_authenticated %}
+                    <div class="d-flex gap-3">
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>Get Started
+                        </a>
+                        <a href="{{ url_for('main.services') }}" class="btn btn-outline-light btn-lg">
+                            <i class="bi bi-info-circle me-2"></i>Learn More
+                        </a>
+                    </div>
+                {% else %}
+                    {% if current_user.is_admin() %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-light btn-lg">
+                            <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+                        </a>
+                    {% else %}
+                        <div class="d-flex gap-3">
+                            <a href="{{ url_for('customer.new_request') }}" class="btn btn-light btn-lg">
+                                <i class="bi bi-plus-circle me-2"></i>Request Service
+                            </a>
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-speedometer2 me-2"></i>My Dashboard
+                            </a>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="col-lg-6">
+                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                     alt="Students studying" class="img-fluid rounded shadow">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="display-5 fw-bold mb-3">Why Choose Our Services?</h2>
+                <p class="lead text-muted">
+                    We offer personalized educational support tailored to your unique needs and goals.
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 60px; height: 60px;">
+                            <i class="bi bi-person-check fs-4"></i>
+                        </div>
+                        <h5 class="card-title">Expert Tutors</h5>
+                        <p class="card-text text-muted">
+                            Our certified tutors have years of experience in their respective fields and are passionate about helping students succeed.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 60px; height: 60px;">
+                            <i class="bi bi-clock fs-4"></i>
+                        </div>
+                        <h5 class="card-title">Flexible Scheduling</h5>
+                        <p class="card-text text-muted">
+                            We work around your schedule with flexible timing options including evenings and weekends.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 60px; height: 60px;">
+                            <i class="bi bi-graph-up fs-4"></i>
+                        </div>
+                        <h5 class="card-title">Proven Results</h5>
+                        <p class="card-text text-muted">
+                            Our students consistently achieve improved grades and enhanced understanding of their subjects.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Overview -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="display-5 fw-bold mb-3">Our Services</h2>
+                <p class="lead text-muted">
+                    Comprehensive educational support across various subjects and levels.
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-calculator fs-3"></i>
+                    </div>
+                    <h5>Mathematics</h5>
+                    <p class="text-muted">Algebra, Calculus, Statistics, and more</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-flask fs-3"></i>
+                    </div>
+                    <h5>Sciences</h5>
+                    <p class="text-muted">Physics, Chemistry, Biology, and Earth Sciences</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center">
+                    <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-book fs-3"></i>
+                    </div>
+                    <h5>Languages</h5>
+                    <p class="text-muted">English, Literature, Writing, and Foreign Languages</p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="text-center">
+                    <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-laptop fs-3"></i>
+                    </div>
+                    <h5>Technology</h5>
+                    <p class="text-muted">Computer Science, Programming, and Digital Skills</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-5">
+            <a href="{{ url_for('main.services') }}" class="btn btn-primary btn-lg">
+                <i class="bi bi-arrow-right me-2"></i>View All Services
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+{% if not current_user.is_authenticated %}
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="display-5 fw-bold mb-3">Ready to Get Started?</h2>
+                <p class="lead mb-4">
+                    Join thousands of students who have improved their academic performance with our help.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">
+                        <i class="bi bi-person-plus me-2"></i>Register Now
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

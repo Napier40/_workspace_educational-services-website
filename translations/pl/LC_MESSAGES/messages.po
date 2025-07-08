@@ -1,0 +1,430 @@
+# Polish translations for Educational Services.
+# Copyright (C) 2025 Educational Services
+# This file is distributed under the same license as the Educational Services project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Educational Services 2.0.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-01-01 12:00+0000\n"
+"PO-Revision-Date: 2025-01-01 12:00+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pl\n"
+"Language-Team: pl <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+# Navigation
+msgid "Home"
+msgstr "Strona Główna"
+
+msgid "About"
+msgstr "O Nas"
+
+msgid "Services"
+msgstr "Usługi"
+
+msgid "Contact"
+msgstr "Kontakt"
+
+msgid "Login"
+msgstr "Logowanie"
+
+msgid "Register"
+msgstr "Rejestracja"
+
+msgid "Logout"
+msgstr "Wyloguj"
+
+msgid "My Account"
+msgstr "Moje Konto"
+
+msgid "My Requests"
+msgstr "Moje Zlecenia"
+
+msgid "Admin Panel"
+msgstr "Panel Administratora"
+
+msgid "Dashboard"
+msgstr "Panel"
+
+# Common actions
+msgid "Submit"
+msgstr "Wyślij"
+
+msgid "Cancel"
+msgstr "Anuluj"
+
+msgid "Save"
+msgstr "Zapisz"
+
+msgid "Delete"
+msgstr "Usuń"
+
+msgid "Edit"
+msgstr "Edytuj"
+
+msgid "View"
+msgstr "Zobacz"
+
+msgid "Search"
+msgstr "Szukaj"
+
+msgid "Filter"
+msgstr "Filtruj"
+
+msgid "Export"
+msgstr "Eksportuj"
+
+msgid "Import"
+msgstr "Importuj"
+
+# Status messages
+msgid "Success"
+msgstr "Sukces"
+
+msgid "Error"
+msgstr "Błąd"
+
+msgid "Warning"
+msgstr "Ostrzeżenie"
+
+msgid "Info"
+msgstr "Informacja"
+
+# User management
+msgid "Users"
+msgstr "Użytkownicy"
+
+msgid "User Management"
+msgstr "Zarządzanie Użytkownikami"
+
+msgid "Add User"
+msgstr "Dodaj Użytkownika"
+
+msgid "Edit User"
+msgstr "Edytuj Użytkownika"
+
+msgid "User Profile"
+msgstr "Profil Użytkownika"
+
+msgid "First Name"
+msgstr "Imię"
+
+msgid "Last Name"
+msgstr "Nazwisko"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Phone Number"
+msgstr "Numer Telefonu"
+
+msgid "Password"
+msgstr "Hasło"
+
+msgid "Confirm Password"
+msgstr "Potwierdź Hasło"
+
+msgid "Role"
+msgstr "Rola"
+
+msgid "Active"
+msgstr "Aktywny"
+
+msgid "Customer"
+msgstr "Klient"
+
+msgid "Staff"
+msgstr "Personel"
+
+msgid "Administrator"
+msgstr "Administrator"
+
+# Service management
+msgid "Service Name"
+msgstr "Nazwa Usługi"
+
+msgid "Description"
+msgstr "Opis"
+
+msgid "Category"
+msgstr "Kategoria"
+
+msgid "Base Price"
+msgstr "Cena Podstawowa"
+
+msgid "Duration (Hours)"
+msgstr "Czas Trwania (Godziny)"
+
+msgid "Requirements"
+msgstr "Wymagania"
+
+msgid "Service Requests"
+msgstr "Zlecenia Usług"
+
+msgid "New Request"
+msgstr "Nowe Zlecenie"
+
+msgid "Request Details"
+msgstr "Szczegóły Zlecenia"
+
+msgid "Special Requirements"
+msgstr "Wymagania Specjalne"
+
+msgid "Preferred Date"
+msgstr "Preferowana Data"
+
+# Payment management
+msgid "Payments"
+msgstr "Płatności"
+
+msgid "Payment Method"
+msgstr "Metoda Płatności"
+
+msgid "Amount"
+msgstr "Kwota"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Pending"
+msgstr "Oczekujące"
+
+msgid "Approved"
+msgstr "Zatwierdzone"
+
+msgid "Rejected"
+msgstr "Odrzucone"
+
+msgid "Credit Card"
+msgstr "Karta Kredytowa"
+
+msgid "Debit Card"
+msgstr "Karta Debetowa"
+
+msgid "Bank Transfer"
+msgstr "Przelew Bankowy"
+
+msgid "PayPal"
+msgstr "PayPal"
+
+msgid "Cash"
+msgstr "Gotówka"
+
+# Reports
+msgid "Reports"
+msgstr "Raporty"
+
+msgid "Generate Report"
+msgstr "Generuj Raport"
+
+msgid "Report Name"
+msgstr "Nazwa Raportu"
+
+msgid "Report Type"
+msgstr "Typ Raportu"
+
+msgid "From Date"
+msgstr "Od Daty"
+
+msgid "To Date"
+msgstr "Do Daty"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "Users Report"
+msgstr "Raport Użytkowników"
+
+msgid "Services Report"
+msgstr "Raport Usług"
+
+msgid "Service Requests Report"
+msgstr "Raport Zleceń"
+
+msgid "Payments Report"
+msgstr "Raport Płatności"
+
+msgid "Financial Summary"
+msgstr "Podsumowanie Finansowe"
+
+msgid "Audit Log Report"
+msgstr "Raport Dziennika Audytu"
+
+msgid "PDF"
+msgstr "PDF"
+
+msgid "Excel"
+msgstr "Excel"
+
+msgid "CSV"
+msgstr "CSV"
+
+# Form validation messages
+msgid "This field is required."
+msgstr "To pole jest wymagane."
+
+msgid "Invalid email address."
+msgstr "Nieprawidłowy adres email."
+
+msgid "Passwords must match."
+msgstr "Hasła muszą się zgadzać."
+
+msgid "Password must be at least 8 characters long."
+msgstr "Hasło musi mieć co najmniej 8 znaków."
+
+# Success messages
+msgid "Registration successful! You can now log in."
+msgstr "Rejestracja zakończona pomyślnie! Możesz się teraz zalogować."
+
+msgid "Login successful! Welcome back."
+msgstr "Logowanie zakończone pomyślnie! Witamy ponownie."
+
+msgid "You have been logged out successfully."
+msgstr "Zostałeś pomyślnie wylogowany."
+
+msgid "Your service request has been submitted successfully!"
+msgstr "Twoje zlecenie zostało pomyślnie wysłane!"
+
+msgid "Payment approved successfully"
+msgstr "Płatność została pomyślnie zatwierdzona"
+
+msgid "Status updated successfully"
+msgstr "Status został pomyślnie zaktualizowany"
+
+# Error messages
+msgid "Invalid email or password."
+msgstr "Nieprawidłowy email lub hasło."
+
+msgid "Your account has been deactivated. Please contact support."
+msgstr "Twoje konto zostało dezaktywowane. Skontaktuj się z pomocą techniczną."
+
+msgid "Account is temporarily locked. Please try again later."
+msgstr "Konto jest tymczasowo zablokowane. Spróbuj ponownie później."
+
+msgid "An account with this email already exists."
+msgstr "Konto z tym adresem email już istnieje."
+
+msgid "Access denied. Insufficient permissions."
+msgstr "Dostęp zabroniony. Niewystarczające uprawnienia."
+
+msgid "Access denied. Admin privileges required."
+msgstr "Dostęp zabroniony. Wymagane uprawnienia administratora."
+
+msgid "Access denied. Staff privileges required."
+msgstr "Dostęp zabroniony. Wymagane uprawnienia personelu."
+
+# Contact form
+msgid "Name"
+msgstr "Nazwa"
+
+msgid "Subject"
+msgstr "Temat"
+
+msgid "Message"
+msgstr "Wiadomość"
+
+msgid "Send Message"
+msgstr "Wyślij Wiadomość"
+
+# Feedback
+msgid "Rating"
+msgstr "Ocena"
+
+msgid "Feedback"
+msgstr "Opinia"
+
+msgid "5 - Excellent"
+msgstr "5 - Doskonale"
+
+msgid "4 - Very Good"
+msgstr "4 - Bardzo Dobrze"
+
+msgid "3 - Good"
+msgstr "3 - Dobrze"
+
+msgid "2 - Fair"
+msgstr "2 - Średnio"
+
+msgid "1 - Poor"
+msgstr "1 - Słabo"
+
+# File upload
+msgid "File"
+msgstr "Plik"
+
+msgid "Upload"
+msgstr "Prześlij"
+
+msgid "No file selected"
+msgstr "Nie wybrano pliku"
+
+msgid "File type not allowed"
+msgstr "Typ pliku niedozwolony"
+
+msgid "File too large"
+msgstr "Plik zbyt duży"
+
+msgid "File is valid"
+msgstr "Plik jest prawidłowy"
+
+# Miscellaneous
+msgid "Welcome"
+msgstr "Witamy"
+
+msgid "Thank you"
+msgstr "Dziękujemy"
+
+msgid "Please wait..."
+msgstr "Proszę czekać..."
+
+msgid "Loading..."
+msgstr "Ładowanie..."
+
+msgid "No results found"
+msgstr "Nie znaleziono wyników"
+
+msgid "Page not found"
+msgstr "Strona nie znaleziona"
+
+msgid "Server error"
+msgstr "Błąd serwera"
+
+msgid "Language"
+msgstr "Język"
+
+msgid "English"
+msgstr "Angielski"
+
+msgid "Polish"
+msgstr "Polski"
+
+# Payment Status
+msgid "Outstanding Payments"
+msgstr "Zaległe Płatności"
+
+msgid "All payments up to date"
+msgstr "Wszystkie płatności aktualne"
+
+msgid "Payment Processing"
+msgstr "Przetwarzanie Płatności"
+
+msgid "Payment Required"
+msgstr "Wymagana Płatność"
+
+msgid "Unpaid"
+msgstr "Nieopłacone"
+
+msgid "Paid"
+msgstr "Opłacone"
+
+msgid "Payment Pending"
+msgstr "Płatność Oczekująca"
+
+msgid "TBD"
+msgstr "Do Ustalenia"

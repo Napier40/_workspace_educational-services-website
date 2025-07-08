@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Add Expense') }} - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>{{ _('Add Business Expense') }}
+                    </h1>
+                    <p class="text-muted">{{ _('Record a new business expense for tax tracking') }}</p>
+                </div>
+                <a href="{{ url_for('admin.expense_management') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>{{ _('Back to Expenses') }}
+                </a>
+            </div>
+
+            <!-- Add Expense Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- Expense Category -->
+                        <div class="mb-4">
+                            <label for="category_id" class="form-label">
+                                <i class="bi bi-tags me-1"></i>{{ _('Expense Category') }} <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="category_id" name="category_id" required>
+                                <option value="">{{ _('Select Category') }}</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">
+                                    {{ category.name }}
+                                    {% if not category.is_tax_deductible %} ({{ _('Not Tax Deductible') }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                {{ _('Choose the category that best describes this expense.') }}
+                            </div>
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="mb-4">
+                            <label for="amount" class="form-label">
+                                <i class="bi bi-currency-dollar me-1"></i>{{ _('Amount') }} <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       step="0.01" min="0.01" required>
+                            </div>
+                            <div class="form-text">
+                                {{ _('Enter the total amount of the expense.') }}
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label for="description" class="form-label">
+                                <i class="bi bi-file-text me-1"></i>{{ _('Description') }} <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="description" name="description" 
+                                   maxlength="200" required placeholder="{{ _('Brief description of the expense') }}">
+                            <div class="form-text">
+                                {{ _('Provide a clear description of what this expense was for.') }}
+                            </div>
+                        </div>
+
+                        <!-- Expense Date -->
+                        <div class="mb-4">
+                            <label for="expense_date" class="form-label">
+                                <i class="bi bi-calendar me-1"></i>{{ _('Expense Date') }} <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" id="expense_date" name="expense_date" 
+                                   value="{{ moment().format('YYYY-MM-DD') }}" required>
+                            <div class="form-text">
+                                {{ _('When was this expense incurred?') }}
+                            </div>
+                        </div>
+
+                        <!-- Tax Deductible -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_tax_deductible" 
+                                       name="is_tax_deductible" checked>
+                                <label class="form-check-label" for="is_tax_deductible">
+                                    <i class="bi bi-check-circle me-1"></i>{{ _('This expense is tax deductible') }}
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                {{ _('Check this if the expense can be deducted from taxable income.') }}
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-plus-circle me-2"></i>{{ _('Add Expense') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Expense Guidelines -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6><i class="bi bi-info-circle me-2"></i>{{ _('Tax Deductible Expense Guidelines') }}</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">✓ {{ _('Generally Deductible:') }}</h6>
+                            <ul class="small">
+                                <li>{{ _('Office supplies and equipment') }}</li>
+                                <li>{{ _('Software and professional tools') }}</li>
+                                <li>{{ _('Business-related travel') }}</li>
+                                <li>{{ _('Professional development') }}</li>
+                                <li>{{ _('Marketing and advertising') }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning">⚠ {{ _('Check with Tax Professional:') }}</h6>
+                            <ul class="small">
+                                <li>{{ _('Home office expenses') }}</li>
+                                <li>{{ _('Vehicle expenses') }}</li>
+                                <li>{{ _('Entertainment expenses') }}</li>
+                                <li>{{ _('Large equipment purchases') }}</li>
+                                <li>{{ _('Personal/business mixed expenses') }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('category_id');
+    const taxDeductibleCheck = document.getElementById('is_tax_deductible');
+    
+    // Update tax deductible checkbox based on category selection
+    categorySelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.text.includes('{{ _("Not Tax Deductible") }}')) {
+            taxDeductibleCheck.checked = false;
+            taxDeductibleCheck.disabled = true;
+        } else {
+            taxDeductibleCheck.disabled = false;
+            taxDeductibleCheck.checked = true;
+        }
+    });
+    
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('expense_date').value = today;
+});
+</script>
+{% endblock %}
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>

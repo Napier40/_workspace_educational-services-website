@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Financial Dashboard') }} - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="bi bi-graph-up me-2"></i>{{ _('Financial Dashboard') }}
+            </h1>
+            <p class="text-muted">{{ _('Track income, expenses, and monthly tax obligations') }}</p>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <a href="{{ url_for('admin.expense_management') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-receipt me-1"></i>{{ _('Manage Expenses') }}
+                </a>
+                <a href="{{ url_for('admin.tax_management') }}" class="btn btn-outline-success">
+                    <i class="bi bi-calculator me-1"></i>{{ _('Tax Management') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Month Summary -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-currency-dollar fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">{{ _('Monthly Income') }}</div>
+                            <div class="h4 mb-0">${{ "%.2f"|format(current_summary.total_income) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-receipt fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">{{ _('Monthly Expenses') }}</div>
+                            <div class="h4 mb-0">${{ "%.2f"|format(current_summary.total_expenses) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-graph-up fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">{{ _('Net Income') }}</div>
+                            <div class="h4 mb-0 {% if current_summary.net_income >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                ${{ "%.2f"|format(current_summary.net_income) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-calculator fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">{{ _('Monthly Tax (9%)') }}</div>
+                            <div class="h4 mb-0">${{ "%.2f"|format(current_summary.tax_liability) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Year-to-Date Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-year me-2"></i>{{ _('Year-to-Date Summary') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <div class="h3 text-success">${{ "%.2f"|format(ytd_income) }}</div>
+                                <div class="text-muted">{{ _('Total Income') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <div class="h3 text-danger">${{ "%.2f"|format(ytd_expenses) }}</div>
+                                <div class="text-muted">{{ _('Total Expenses') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <div class="h3 {% if ytd_net_income >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    ${{ "%.2f"|format(ytd_net_income) }}
+                                </div>
+                                <div class="text-muted">{{ _('Net Income') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="h3 text-warning">${{ "%.2f"|format(ytd_tax_liability) }}</div>
+                            <div class="text-muted">{{ _('Tax Liability') }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Month Tax Status -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calculator me-2"></i>{{ current_tax_record.get_month_name() }} {{ _('Tax Status') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <div class="text-muted small">{{ _('Gross Income') }}</div>
+                                <div class="h5">${{ "%.2f"|format(current_tax_record.gross_income) }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="text-muted small">{{ _('Deductible Expenses') }}</div>
+                                <div class="h5">${{ "%.2f"|format(current_tax_record.tax_deductible_expenses) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <div class="text-muted small">{{ _('Taxable Income') }}</div>
+                                <div class="h5">${{ "%.2f"|format(current_tax_record.taxable_income) }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="text-muted small">{{ _('Tax Owed (9%)') }}</div>
+                                <div class="h5 text-warning">${{ "%.2f"|format(current_tax_record.tax_owed) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if current_tax_record.due_date %}
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-calendar-event me-2"></i>
+                        <strong>{{ _('Due Date') }}:</strong> {{ current_tax_record.due_date.strftime('%B %d, %Y') }}
+                        {% if current_tax_record.is_overdue() %}
+                        <span class="badge bg-danger ms-2">{{ _('OVERDUE') }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-receipt me-2"></i>{{ _('Recent Expenses') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_expenses %}
+                    <div class="list-group list-group-flush">
+                        {% for expense in recent_expenses %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold">{{ expense.description }}</div>
+                                    <div class="text-muted small">
+                                        {{ expense.category.name }} • {{ expense.get_formatted_date() }}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold">{{ expense.get_formatted_amount() }}</div>
+                                    {% if expense.is_tax_deductible %}
+                                    <span class="badge bg-success">{{ _('Tax Deductible') }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('admin.expense_management') }}" class="btn btn-outline-primary btn-sm">
+                            {{ _('View All Expenses') }}
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-receipt fs-1 d-block mb-2"></i>
+                        <p>{{ _('No expenses recorded yet') }}</p>
+                        <a href="{{ url_for('admin.add_expense') }}" class="btn btn-primary">
+                            {{ _('Add First Expense') }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends Chart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-graph-up me-2"></i>{{ _('6-Month Financial Trends') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('trendsChart').getContext('2d');
+    const trendsData = {{ monthly_trends | tojson }};
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trendsData.map(item => item.month),
+            datasets: [
+                {
+                    label: '{{ _("Income") }}',
+                    data: trendsData.map(item => item.income),
+                    borderColor: 'rgb(25, 135, 84)',
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: '{{ _("Expenses") }}',
+                    data: trendsData.map(item => item.expenses),
+                    borderColor: 'rgb(220, 53, 69)',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: '{{ _("Net Income") }}',
+                    data: trendsData.map(item => item.net_income),
+                    borderColor: 'rgb(13, 110, 253)',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>

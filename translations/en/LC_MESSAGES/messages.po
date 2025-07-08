@@ -1,0 +1,430 @@
+# English translations for Educational Services.
+# Copyright (C) 2025 Educational Services
+# This file is distributed under the same license as the Educational Services project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Educational Services 2.0.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-01-01 12:00+0000\n"
+"PO-Revision-Date: 2025-01-01 12:00+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+# Navigation
+msgid "Home"
+msgstr "Home"
+
+msgid "About"
+msgstr "About"
+
+msgid "Services"
+msgstr "Services"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Register"
+msgstr "Register"
+
+msgid "Logout"
+msgstr "Logout"
+
+msgid "My Account"
+msgstr "My Account"
+
+msgid "My Requests"
+msgstr "My Requests"
+
+msgid "Admin Panel"
+msgstr "Admin Panel"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+# Common actions
+msgid "Submit"
+msgstr "Submit"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Edit"
+msgstr "Edit"
+
+msgid "View"
+msgstr "View"
+
+msgid "Search"
+msgstr "Search"
+
+msgid "Filter"
+msgstr "Filter"
+
+msgid "Export"
+msgstr "Export"
+
+msgid "Import"
+msgstr "Import"
+
+# Status messages
+msgid "Success"
+msgstr "Success"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Warning"
+msgstr "Warning"
+
+msgid "Info"
+msgstr "Info"
+
+# User management
+msgid "Users"
+msgstr "Users"
+
+msgid "User Management"
+msgstr "User Management"
+
+msgid "Add User"
+msgstr "Add User"
+
+msgid "Edit User"
+msgstr "Edit User"
+
+msgid "User Profile"
+msgstr "User Profile"
+
+msgid "First Name"
+msgstr "First Name"
+
+msgid "Last Name"
+msgstr "Last Name"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Phone Number"
+msgstr "Phone Number"
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Confirm Password"
+msgstr "Confirm Password"
+
+msgid "Role"
+msgstr "Role"
+
+msgid "Active"
+msgstr "Active"
+
+msgid "Customer"
+msgstr "Customer"
+
+msgid "Staff"
+msgstr "Staff"
+
+msgid "Administrator"
+msgstr "Administrator"
+
+# Service management
+msgid "Service Name"
+msgstr "Service Name"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Category"
+msgstr "Category"
+
+msgid "Base Price"
+msgstr "Base Price"
+
+msgid "Duration (Hours)"
+msgstr "Duration (Hours)"
+
+msgid "Requirements"
+msgstr "Requirements"
+
+msgid "Service Requests"
+msgstr "Service Requests"
+
+msgid "New Request"
+msgstr "New Request"
+
+msgid "Request Details"
+msgstr "Request Details"
+
+msgid "Special Requirements"
+msgstr "Special Requirements"
+
+msgid "Preferred Date"
+msgstr "Preferred Date"
+
+# Payment management
+msgid "Payments"
+msgstr "Payments"
+
+msgid "Payment Method"
+msgstr "Payment Method"
+
+msgid "Amount"
+msgstr "Amount"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Pending"
+msgstr "Pending"
+
+msgid "Approved"
+msgstr "Approved"
+
+msgid "Rejected"
+msgstr "Rejected"
+
+msgid "Credit Card"
+msgstr "Credit Card"
+
+msgid "Debit Card"
+msgstr "Debit Card"
+
+msgid "Bank Transfer"
+msgstr "Bank Transfer"
+
+msgid "PayPal"
+msgstr "PayPal"
+
+msgid "Cash"
+msgstr "Cash"
+
+# Reports
+msgid "Reports"
+msgstr "Reports"
+
+msgid "Generate Report"
+msgstr "Generate Report"
+
+msgid "Report Name"
+msgstr "Report Name"
+
+msgid "Report Type"
+msgstr "Report Type"
+
+msgid "From Date"
+msgstr "From Date"
+
+msgid "To Date"
+msgstr "To Date"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "Users Report"
+msgstr "Users Report"
+
+msgid "Services Report"
+msgstr "Services Report"
+
+msgid "Service Requests Report"
+msgstr "Service Requests Report"
+
+msgid "Payments Report"
+msgstr "Payments Report"
+
+msgid "Financial Summary"
+msgstr "Financial Summary"
+
+msgid "Audit Log Report"
+msgstr "Audit Log Report"
+
+msgid "PDF"
+msgstr "PDF"
+
+msgid "Excel"
+msgstr "Excel"
+
+msgid "CSV"
+msgstr "CSV"
+
+# Form validation messages
+msgid "This field is required."
+msgstr "This field is required."
+
+msgid "Invalid email address."
+msgstr "Invalid email address."
+
+msgid "Passwords must match."
+msgstr "Passwords must match."
+
+msgid "Password must be at least 8 characters long."
+msgstr "Password must be at least 8 characters long."
+
+# Success messages
+msgid "Registration successful! You can now log in."
+msgstr "Registration successful! You can now log in."
+
+msgid "Login successful! Welcome back."
+msgstr "Login successful! Welcome back."
+
+msgid "You have been logged out successfully."
+msgstr "You have been logged out successfully."
+
+msgid "Your service request has been submitted successfully!"
+msgstr "Your service request has been submitted successfully!"
+
+msgid "Payment approved successfully"
+msgstr "Payment approved successfully"
+
+msgid "Status updated successfully"
+msgstr "Status updated successfully"
+
+# Error messages
+msgid "Invalid email or password."
+msgstr "Invalid email or password."
+
+msgid "Your account has been deactivated. Please contact support."
+msgstr "Your account has been deactivated. Please contact support."
+
+msgid "Account is temporarily locked. Please try again later."
+msgstr "Account is temporarily locked. Please try again later."
+
+msgid "An account with this email already exists."
+msgstr "An account with this email already exists."
+
+msgid "Access denied. Insufficient permissions."
+msgstr "Access denied. Insufficient permissions."
+
+msgid "Access denied. Admin privileges required."
+msgstr "Access denied. Admin privileges required."
+
+msgid "Access denied. Staff privileges required."
+msgstr "Access denied. Staff privileges required."
+
+# Contact form
+msgid "Name"
+msgstr "Name"
+
+msgid "Subject"
+msgstr "Subject"
+
+msgid "Message"
+msgstr "Message"
+
+msgid "Send Message"
+msgstr "Send Message"
+
+# Feedback
+msgid "Rating"
+msgstr "Rating"
+
+msgid "Feedback"
+msgstr "Feedback"
+
+msgid "5 - Excellent"
+msgstr "5 - Excellent"
+
+msgid "4 - Very Good"
+msgstr "4 - Very Good"
+
+msgid "3 - Good"
+msgstr "3 - Good"
+
+msgid "2 - Fair"
+msgstr "2 - Fair"
+
+msgid "1 - Poor"
+msgstr "1 - Poor"
+
+# File upload
+msgid "File"
+msgstr "File"
+
+msgid "Upload"
+msgstr "Upload"
+
+msgid "No file selected"
+msgstr "No file selected"
+
+msgid "File type not allowed"
+msgstr "File type not allowed"
+
+msgid "File too large"
+msgstr "File too large"
+
+msgid "File is valid"
+msgstr "File is valid"
+
+# Miscellaneous
+msgid "Welcome"
+msgstr "Welcome"
+
+msgid "Thank you"
+msgstr "Thank you"
+
+msgid "Please wait..."
+msgstr "Please wait..."
+
+msgid "Loading..."
+msgstr "Loading..."
+
+msgid "No results found"
+msgstr "No results found"
+
+msgid "Page not found"
+msgstr "Page not found"
+
+msgid "Server error"
+msgstr "Server error"
+
+msgid "Language"
+msgstr "Language"
+
+msgid "English"
+msgstr "English"
+
+msgid "Polish"
+msgstr "Polish"
+
+# Payment Status
+msgid "Outstanding Payments"
+msgstr "Outstanding Payments"
+
+msgid "All payments up to date"
+msgstr "All payments up to date"
+
+msgid "Payment Processing"
+msgstr "Payment Processing"
+
+msgid "Payment Required"
+msgstr "Payment Required"
+
+msgid "Unpaid"
+msgstr "Unpaid"
+
+msgid "Paid"
+msgstr "Paid"
+
+msgid "Payment Pending"
+msgstr "Payment Pending"
+
+msgid "TBD"
+msgstr "TBD"

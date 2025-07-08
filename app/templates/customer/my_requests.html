@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}My Requests - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('customer.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">My Requests</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-list-ul me-2"></i>My Service Requests
+            </h1>
+            <p class="text-muted">Track and manage all your educational service requests</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('customer.new_request') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>New Request
+            </a>
+        </div>
+    </div>
+    
+    <!-- Requests Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    {% if requests.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Request Details</th>
+                                        <th>Service Type</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Estimated Time</th>
+                                        <th>Pricing</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in requests.items %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">{{ request.title }}</div>
+                                            <small class="text-muted">{{ request.description[:80] }}{% if request.description|length > 80 %}...{% endif %}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ request.service_type }}</span>
+                                        </td>
+                                        <td>
+                                            {% if request.priority == 'high' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>High
+                                                </span>
+                                            {% elif request.priority == 'medium' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-dash-circle me-1"></i>Medium
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i>Low
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.status == 'pending' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-clock me-1"></i>Pending
+                                                </span>
+                                            {% elif request.status == 'in_progress' %}
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-arrow-repeat me-1"></i>In Progress
+                                                </span>
+                                            {% elif request.status == 'completed' %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i>Completed
+                                                </span>
+                                            {% elif request.status == 'cancelled' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle me-1"></i>Cancelled
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.estimated_response_days or request.estimated_response_hours %}
+                                                <div class="fw-bold">{{ request.get_formatted_estimated_time() }}</div>
+                                                {% if request.is_estimated_time_overdue() %}
+                                                    <small class="text-danger">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>Overdue
+                                                    </small>
+                                                {% elif request.response_deadline %}
+                                                    <small class="text-muted">
+                                                        Due: {{ request.response_deadline.strftime('%m/%d/%Y') }}
+                                                    </small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">Not set</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if request.estimated_hours and request.hourly_rate %}
+                                                <div class="fw-bold text-success">{{ request.get_formatted_price() }}</div>
+                                                <small class="text-muted">{{ request.estimated_hours }}h @ {{ request.get_formatted_rate() }}</small>
+                                                {% if not request.pricing_approved %}
+                                                    <br><small class="text-warning">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>Needs approval
+                                                    </small>
+                                                {% else %}
+                                                    <br><small class="text-success">
+                                                        <i class="bi bi-check-circle me-1"></i>Approved
+                                                    </small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">Not set</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>{{ request.created_at.strftime('%m/%d/%Y') }}</div>
+                                            <small class="text-muted">{{ request.created_at.strftime('%I:%M %p') }}</small>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('customer.request_detail', id=request.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if requests.pages > 1 %}
+                        <div class="card-footer bg-white border-top">
+                            <nav aria-label="Requests pagination">
+                                <ul class="pagination pagination-sm justify-content-center mb-0">
+                                    {% if requests.has_prev %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('customer.my_requests', page=requests.prev_num) }}">
+                                                <i class="bi bi-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for page_num in requests.iter_pages() %}
+                                        {% if page_num %}
+                                            {% if page_num != requests.page %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('customer.my_requests', page=page_num) }}">
+                                                        {{ page_num }}
+                                                    </a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if requests.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('customer.my_requests', page=requests.next_num) }}">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="text-muted mt-3">No requests found</h4>
+                            <p class="text-muted mb-4">
+                                You haven't submitted any service requests yet. Get started by creating your first request!
+                            </p>
+                            <a href="{{ url_for('customer.new_request') }}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-plus-circle me-2"></i>Create Your First Request
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Request Statistics -->
+    {% if requests.items %}
+    <div class="row mt-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-list-task text-primary fs-2 mb-2"></i>
+                    <h6 class="card-title">Total Requests</h6>
+                    <div class="h4 text-primary mb-0">{{ requests.total }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-clock text-warning fs-2 mb-2"></i>
+                    <h6 class="card-title">Pending</h6>
+                    <div class="h4 text-warning mb-0">
+                        {{ requests.items | selectattr('status', 'equalto', 'pending') | list | length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-arrow-repeat text-info fs-2 mb-2"></i>
+                    <h6 class="card-title">In Progress</h6>
+                    <div class="h4 text-info mb-0">
+                        {{ requests.items | selectattr('status', 'equalto', 'in_progress') | list | length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-check-circle text-success fs-2 mb-2"></i>
+                    <h6 class="card-title">Completed</h6>
+                    <div class="h4 text-success mb-0">
+                        {{ requests.items | selectattr('status', 'equalto', 'completed') | list | length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

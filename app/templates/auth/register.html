@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-plus-fill text-success" style="font-size: 3rem;"></i>
+                        <h2 class="mt-3 mb-1">Create Account</h2>
+                        <p class="text-muted">Join our educational community</p>
+                    </div>
+                    
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                            <div class="form-text">Choose a unique username (letters, numbers, and underscores only)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number (Optional)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-telephone"></i>
+                                </span>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                            </div>
+                        </div>
+                        
+                        <!-- Plan Selection -->
+                        {% if pricing_plans %}
+                        <div class="mb-4">
+                            <label class="form-label">Choose Your Plan</label>
+                            <div class="row g-3">
+                                {% for plan in pricing_plans %}
+                                <div class="col-md-4">
+                                    <div class="card h-100 plan-card {% if plan.is_popular %}border-primary{% endif %}" 
+                                         onclick="selectPlan({{ plan.id }})">
+                                        {% if plan.is_popular %}
+                                        <div class="card-header bg-primary text-white text-center py-1">
+                                            <small class="badge bg-light text-primary">Most Popular</small>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="card-body p-3 text-center">
+                                            <input type="radio" name="selected_plan_id" value="{{ plan.id }}" 
+                                                   id="plan_{{ plan.id }}" class="form-check-input d-none plan-radio"
+                                                   {% if plan.is_popular %}checked{% endif %}>
+                                            
+                                            <h6 class="card-title mb-2">{{ plan.plan_name }}</h6>
+                                            <div class="h5 text-primary mb-2">
+                                                {{ plan.price }}
+                                                {% if plan.price_period %}
+                                                    <small class="text-muted">{{ plan.price_period }}</small>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if plan.description %}
+                                            <p class="small text-muted mb-2">{{ plan.description }}</p>
+                                            {% endif %}
+                                            
+                                            {% if plan.features %}
+                                            <ul class="list-unstyled small">
+                                                {% for feature in plan.get_features_list()[:3] %}
+                                                <li class="mb-1">
+                                                    <i class="bi bi-check-circle text-success me-1"></i>{{ feature }}
+                                                </li>
+                                                {% endfor %}
+                                                {% if plan.get_features_list()|length > 3 %}
+                                                <li class="text-muted">+ {{ plan.get_features_list()|length - 3 }} more</li>
+                                                {% endif %}
+                                            </ul>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text">You can change your plan later from your dashboard</div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="confirm_password" class="form-label">Confirm Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-lock-fill"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> 
+                                    and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100 mb-3">
+                            <i class="bi bi-person-plus me-2"></i>Create Account
+                        </button>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? 
+                            <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+                                Sign in here
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.plan-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #dee2e6;
+}
+
+.plan-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.plan-card.selected {
+    border-color: #0d6efd;
+    background-color: #f8f9ff;
+}
+
+.plan-card.selected .card-body {
+    background-color: #f8f9ff;
+}
+</style>
+
+<script>
+// Password confirmation validation
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (password !== confirmPassword) {
+        this.setCustomValidity('Passwords do not match');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+
+// Plan selection functionality
+function selectPlan(planId) {
+    // Remove selected class from all cards
+    document.querySelectorAll('.plan-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Uncheck all radio buttons
+    document.querySelectorAll('.plan-radio').forEach(radio => {
+        radio.checked = false;
+    });
+    
+    // Select the clicked plan
+    const selectedCard = document.querySelector(`#plan_${planId}`).closest('.plan-card');
+    selectedCard.classList.add('selected');
+    document.querySelector(`#plan_${planId}`).checked = true;
+}
+
+// Initialize plan selection on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if any plan is pre-selected (popular plan)
+    const checkedRadio = document.querySelector('.plan-radio:checked');
+    if (checkedRadio) {
+        const selectedCard = checkedRadio.closest('.plan-card');
+        selectedCard.classList.add('selected');
+    }
+});
+</script>
+{% endblock %}

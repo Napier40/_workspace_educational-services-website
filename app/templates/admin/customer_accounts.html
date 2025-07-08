@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Accounts - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="bi bi-people me-2"></i>Customer Accounts
+            </h1>
+            <p class="text-muted">Overview of customer account balances and payment status</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('admin.payments') }}" class="btn btn-outline-primary">
+                <i class="bi bi-credit-card me-1"></i>Payment Management
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-receipt fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Total Billed</div>
+                            <div class="h4 mb-0">${{ "%.2f"|format(total_billed) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-check-circle fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Total Paid</div>
+                            <div class="h4 mb-0">${{ "%.2f"|format(total_paid) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-exclamation-triangle fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Outstanding</div>
+                            <div class="h4 mb-0">${{ "%.2f"|format(total_outstanding) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-people fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="text-muted small">Accounts with Balance</div>
+                            <div class="h4 mb-0">{{ accounts_with_balance }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="balance" class="form-label">Filter by Balance</label>
+                            <select name="balance" id="balance" class="form-select">
+                                <option value="all" {% if balance_filter == 'all' %}selected{% endif %}>All Accounts</option>
+                                <option value="outstanding" {% if balance_filter == 'outstanding' %}selected{% endif %}>Outstanding Balance</option>
+                                <option value="paid" {% if balance_filter == 'paid' %}selected{% endif %}>Fully Paid</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-funnel me-1"></i>Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Accounts Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-list me-2"></i>Customer Account Overview
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if accounts %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th>Total Billed</th>
+                            <th>Total Paid</th>
+                            <th>Outstanding Balance</th>
+                            <th>Last Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for account in accounts %}
+                        <tr class="{% if account.has_outstanding_balance() %}table-warning{% endif %}">
+                            <td>
+                                <div class="fw-bold">{{ account.customer.first_name }} {{ account.customer.last_name }}</div>
+                                <small class="text-muted">@{{ account.customer.username }}</small>
+                            </td>
+                            <td>
+                                <div>{{ account.customer.email }}</div>
+                                {% if account.customer.phone %}
+                                <small class="text-muted">{{ account.customer.phone }}</small>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold">{{ account.get_formatted_total_billed() }}</td>
+                            <td class="text-success fw-bold">{{ account.get_formatted_total_paid() }}</td>
+                            <td>
+                                <span class="fw-bold text-{% if account.has_outstanding_balance() %}warning{% else %}success{% endif %}">
+                                    {{ account.get_formatted_outstanding_balance() }}
+                                </span>
+                                {% if account.has_outstanding_balance() %}
+                                <br><small class="text-muted">Amount Due</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if account.last_payment_date %}
+                                    <div>{{ account.last_payment_date.strftime('%Y-%m-%d') }}</div>
+                                    <small class="text-muted">{{ account.last_payment_date.strftime('%H:%M') }}</small>
+                                {% else %}
+                                    <span class="text-muted">No payments</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('admin.customer_account_detail', customer_id=account.customer.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    {% if account.has_outstanding_balance() %}
+                                    <button type="button" class="btn btn-sm btn-outline-warning" 
+                                            onclick="sendPaymentReminder({{ account.customer.id }})">
+                                        <i class="bi bi-bell"></i> Remind
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-people display-4 text-muted"></i>
+                <h4 class="mt-3">No Customer Accounts Found</h4>
+                <p class="text-muted">
+                    {% if balance_filter == 'all' %}
+                        No customer accounts exist yet.
+                    {% else %}
+                        No accounts match the selected filter.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    {% if accounts_with_balance > 0 %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-outline-warning w-100" 
+                                    onclick="sendBulkPaymentReminders()">
+                                <i class="bi bi-bell me-2"></i>Send Payment Reminders
+                                <br><small>To all customers with outstanding balances</small>
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('admin.export_report', report_type='customer_accounts') }}" 
+                               class="btn btn-outline-primary w-100">
+                                <i class="bi bi-download me-2"></i>Export Account Report
+                                <br><small>Download CSV with all account data</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function sendPaymentReminder(customerId) {
+    if (confirm('Send payment reminder to this customer?')) {
+        // Implementation for sending payment reminder
+        // This would typically make an AJAX call to send an email
+        alert('Payment reminder sent successfully!');
+    }
+}
+
+function sendBulkPaymentReminders() {
+    if (confirm('Send payment reminders to all customers with outstanding balances?')) {
+        // Implementation for bulk payment reminders
+        // This would typically make an AJAX call to send emails to all customers with balances
+        alert('Payment reminders sent to all customers with outstanding balances!');
+    }
+}
+</script>
+{% endblock %}

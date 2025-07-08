@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}New Service Request - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('customer.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">New Request</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-plus-circle me-2"></i>Submit New Service Request
+            </h1>
+            <p class="text-muted">Tell us about the educational service you need</p>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="mb-4">
+                            <label for="title" class="form-label">Request Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="title" name="title" 
+                                   placeholder="Brief description of what you need help with" required>
+                            <div class="form-text">
+                                Example: "Math Tutoring for Calculus" or "Essay Writing Assistance"
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="service_type" class="form-label">Service Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="service_type" name="service_type" required>
+                                    <option value="">Select a service type</option>
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Science">Science</option>
+                                    <option value="English/Literature">English/Literature</option>
+                                    <option value="History">History</option>
+                                    <option value="Foreign Languages">Foreign Languages</option>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Test Preparation">Test Preparation</option>
+                                    <option value="Essay Writing">Essay Writing</option>
+                                    <option value="Research Assistance">Research Assistance</option>
+                                    <option value="Study Skills">Study Skills</option>
+                                    <option value="Academic Consulting">Academic Consulting</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="priority" class="form-label">Priority Level <span class="text-danger">*</span></label>
+                                <select class="form-select" id="priority" name="priority" required>
+                                    <option value="">Select priority</option>
+                                    <option value="low">Low - No rush</option>
+                                    <option value="medium" selected>Medium - Standard timeline</option>
+                                    <option value="high">High - Urgent assistance needed</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="description" class="form-label">Detailed Description <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" rows="6" 
+                                      placeholder="Please provide detailed information about your request..." required></textarea>
+                            <div class="form-text">
+                                Include details such as:
+                                <ul class="mb-0 mt-2">
+                                    <li>Specific topics or subjects you need help with</li>
+                                    <li>Your current level (high school, college, etc.)</li>
+                                    <li>Any deadlines or time constraints</li>
+                                    <li>Preferred format (online, in-person, etc.)</li>
+                                    <li>Any specific requirements or preferences</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Service Information -->
+                        <div class="bg-light p-4 rounded mb-4">
+                            <h6 class="mb-3">
+                                <i class="bi bi-info-circle me-2"></i>What happens next?
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                             style="width: 40px; height: 40px;">
+                                            <i class="bi bi-send"></i>
+                                        </div>
+                                        <h6 class="small">1. Submit Request</h6>
+                                        <p class="small text-muted mb-0">Your request is received and reviewed</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                             style="width: 40px; height: 40px;">
+                                            <i class="bi bi-person-check"></i>
+                                        </div>
+                                        <h6 class="small">2. Admin Review</h6>
+                                        <p class="small text-muted mb-0">We match you with the right tutor</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                             style="width: 40px; height: 40px;">
+                                            <i class="bi bi-chat-dots"></i>
+                                        </div>
+                                        <h6 class="small">3. Get Started</h6>
+                                        <p class="small text-muted mb-0">Begin your educational journey</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send me-2"></i>Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar with tips -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>Tips for Better Requests
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-primary">Be Specific</h6>
+                        <p class="small text-muted mb-0">
+                            The more details you provide, the better we can match you with the right tutor and resources.
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-success">Include Deadlines</h6>
+                        <p class="small text-muted mb-0">
+                            Let us know if you have any upcoming exams, assignments, or project deadlines.
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-info">Mention Your Level</h6>
+                        <p class="small text-muted mb-0">
+                            Specify your academic level (high school, college, graduate) to get appropriate help.
+                        </p>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <h6 class="text-warning">Set Realistic Expectations</h6>
+                        <p class="small text-muted mb-0">
+                            Consider the complexity of your request when setting priority and timeline expectations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact Support -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body text-center">
+                    <i class="bi bi-headset text-primary" style="font-size: 2rem;"></i>
+                    <h6 class="mt-3">Need Help?</h6>
+                    <p class="text-muted small">
+                        If you're unsure about anything, our support team is here to help.
+                    </p>
+                    <a href="mailto:support@eduservices.com" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-envelope me-2"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Character counter for description
+document.addEventListener('DOMContentLoaded', function() {
+    const description = document.getElementById('description');
+    const maxLength = 1000;
+    
+    // Create character counter
+    const counter = document.createElement('div');
+    counter.className = 'form-text text-end';
+    counter.innerHTML = `<span id="char-count">0</span>/${maxLength} characters`;
+    description.parentNode.appendChild(counter);
+    
+    const charCount = document.getElementById('char-count');
+    
+    description.addEventListener('input', function() {
+        const length = this.value.length;
+        charCount.textContent = length;
+        
+        if (length > maxLength * 0.9) {
+            counter.className = 'form-text text-end text-warning';
+        } else {
+            counter.className = 'form-text text-end';
+        }
+    });
+});
+</script>
+{% endblock %}

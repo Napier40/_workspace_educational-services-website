@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}Income Report - Educational Services{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+                <h2><i class="fas fa-chart-line"></i> Income Report</h2>
+                <div>
+                    <a href="{{ url_for('admin.reports_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Reports
+                    </a>
+                    <button onclick="window.print()" class="btn btn-primary">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                    <a href="{{ url_for('admin.export_report', report_type='income', period=period, year=year) }}" class="btn btn-success">
+                        <i class="fas fa-download"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Header -->
+    <div class="print-only text-center mb-4">
+        <h2>Educational Services - Income Report</h2>
+        <p>Period: {{ period.title() }} | Year: {{ year }}</p>
+        <p>Generated on: {{ moment().format('MMMM Do YYYY, h:mm:ss a') }}</p>
+        <hr>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="row mb-4 no-print">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="form-inline">
+                        <div class="form-group mr-3">
+                            <label for="period" class="mr-2">Period:</label>
+                            <select name="period" id="period" class="form-control">
+                                <option value="weekly" {% if period == 'weekly' %}selected{% endif %}>Weekly</option>
+                                <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+                                <option value="yearly" {% if period == 'yearly' %}selected{% endif %}>Yearly</option>
+                            </select>
+                        </div>
+                        <div class="form-group mr-3">
+                            <label for="year" class="mr-2">Year:</label>
+                            <select name="year" id="year" class="form-control">
+                                {% for y in range(2020, 2030) %}
+                                <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter"></i> Apply Filter
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-left-success">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Income</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(total_income) }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-left-primary">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Requests</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">{{ total_requests }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Average per Request</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">
+                        {% if total_requests > 0 %}
+                            ${{ "%.2f"|format(total_income / total_requests) }}
+                        {% else %}
+                            $0.00
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Income Trend - {{ period.title() }} {{ year }}</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="incomeChart" width="100%" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Table -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Detailed Breakdown</h6>
+        </div>
+        <div class="card-body">
+            {% if income_data %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>{{ period.title() }}</th>
+                            <th>Total Income</th>
+                            <th>Request Count</th>
+                            <th>Average per Request</th>
+                            <th>% of Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in income_data %}
+                        <tr>
+                            <td>
+                                {% if period == 'weekly' %}
+                                    Week {{ item.period|int }}
+                                {% elif period == 'monthly' %}
+                                    {% set months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] %}
+                                    {{ months[item.period|int - 1] }} {{ year }}
+                                {% else %}
+                                    {{ item.period|int }}
+                                {% endif %}
+                            </td>
+                            <td class="font-weight-bold text-success">${{ "%.2f"|format(item.total_income or 0) }}</td>
+                            <td>{{ item.request_count or 0 }}</td>
+                            <td>
+                                {% if item.request_count and item.request_count > 0 %}
+                                    ${{ "%.2f"|format((item.total_income or 0) / item.request_count) }}
+                                {% else %}
+                                    $0.00
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if total_income > 0 %}
+                                    {{ "%.1f"|format(((item.total_income or 0) / total_income) * 100) }}%
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="thead-light">
+                        <tr>
+                            <th>Total</th>
+                            <th class="text-success">${{ "%.2f"|format(total_income) }}</th>
+                            <th>{{ total_requests }}</th>
+                            <th>
+                                {% if total_requests > 0 %}
+                                    ${{ "%.2f"|format(total_income / total_requests) }}
+                                {% else %}
+                                    $0.00
+                                {% endif %}
+                            </th>
+                            <th>100.0%</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                <h4>No Income Data</h4>
+                <p class="text-muted">No completed requests with estimates found for the selected period.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = {{ chart_data|safe }};
+    
+    const ctx = document.getElementById('incomeChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Income ($)',
+                data: chartData.income,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1,
+                yAxisID: 'y'
+            }, {
+                label: 'Request Count',
+                data: chartData.requests,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: '{{ period.title() }}'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Income ($)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Request Count'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Income and Request Trends'
+                }
+            }
+        }
+    });
+});
+</script>
+
+<style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-only {
+        display: block !important;
+    }
+    
+    .card {
+        border: 1px solid #dee2e6 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+    
+    body {
+        font-size: 12px;
+    }
+    
+    h2, h3, h4, h5, h6 {
+        color: #000 !important;
+    }
+    
+    #incomeChart {
+        display: none !important;
+    }
+}
+
+.print-only {
+    display: none;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #28a745 !important;
+}
+
+.border-left-primary {
+    border-left: 0.25rem solid #007bff !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #17a2b8 !important;
+}
+</style>
+{% endblock %}

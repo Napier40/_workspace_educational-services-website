@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Customers - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="bi bi-people me-2"></i>Customer Management
+            </h1>
+            <p class="text-muted">View and manage all registered customers</p>
+        </div>
+    </div>
+    
+    <!-- Customers Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    {% if customers.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th>Contact Information</th>
+                                        <th>Registration Date</th>
+                                        <th>Total Requests</th>
+                                        <th>Active Requests</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for customer in customers.items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-person"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-semibold">{{ customer.first_name }} {{ customer.last_name }}</div>
+                                                    <small class="text-muted">@{{ customer.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <i class="bi bi-envelope me-1"></i>{{ customer.email }}
+                                            </div>
+                                            {% if customer.phone %}
+                                            <div class="mt-1">
+                                                <i class="bi bi-telephone me-1"></i>{{ customer.phone }}
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>{{ customer.created_at.strftime('%m/%d/%Y') }}</div>
+                                            <small class="text-muted">{{ customer.created_at.strftime('%I:%M %p') }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark fs-6">{{ customer.service_requests|length }}</span>
+                                        </td>
+                                        <td>
+                                            {% set active_requests = customer.service_requests | selectattr('status', 'in', ['pending', 'in_progress']) | list %}
+                                            {% if active_requests|length > 0 %}
+                                                <span class="badge bg-info fs-6">{{ active_requests|length }}</span>
+                                            {% else %}
+                                                <span class="badge bg-light text-muted fs-6">0</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if customer.is_active %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle me-1"></i>Active
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle me-1"></i>Inactive
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#customerModal{{ customer.id }}"
+                                                        title="View Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if customers.pages > 1 %}
+                        <div class="card-footer bg-white border-top">
+                            <nav aria-label="Customers pagination">
+                                <ul class="pagination pagination-sm justify-content-center mb-0">
+                                    {% if customers.has_prev %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.customers', page=customers.prev_num) }}">
+                                                <i class="bi bi-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for page_num in customers.iter_pages() %}
+                                        {% if page_num %}
+                                            {% if page_num != customers.page %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ url_for('admin.customers', page=page_num) }}">
+                                                        {{ page_num }}
+                                                    </a>
+                                                </li>
+                                            {% else %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_num }}</span>
+                                                </li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if customers.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('admin.customers', page=customers.next_num) }}">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="text-muted mt-3">No customers found</h4>
+                            <p class="text-muted">No customers have registered yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Customer Statistics -->
+    {% if customers.items %}
+    <div class="row mt-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-people text-primary fs-2 mb-2"></i>
+                    <h6 class="card-title">Total Customers</h6>
+                    <div class="h4 text-primary mb-0">{{ customers.total }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-person-check text-success fs-2 mb-2"></i>
+                    <h6 class="card-title">Active Customers</h6>
+                    <div class="h4 text-success mb-0">
+                        {{ customers.items | selectattr('is_active', 'equalto', true) | list | length }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-list-task text-info fs-2 mb-2"></i>
+                    <h6 class="card-title">Total Requests</h6>
+                    <div class="h4 text-info mb-0">
+                        {% set total_requests = 0 %}
+                        {% for customer in customers.items %}
+                            {% set total_requests = total_requests + customer.service_requests|length %}
+                        {% endfor %}
+                        {{ total_requests }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="bi bi-calendar-plus text-warning fs-2 mb-2"></i>
+                    <h6 class="card-title">New This Month</h6>
+                    <div class="h4 text-warning mb-0">
+                        {% set new_this_month = 0 %}
+                        {% for customer in customers.items %}
+                            {% if customer.created_at.month == current_month and customer.created_at.year == current_year %}
+                                {% set new_this_month = new_this_month + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ new_this_month }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Customer Detail Modals -->
+{% for customer in customers.items %}
+<div class="modal fade" id="customerModal{{ customer.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-circle me-2"></i>{{ customer.first_name }} {{ customer.last_name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Contact Information</h6>
+                        <p class="mb-1"><strong>Email:</strong> {{ customer.email }}</p>
+                        <p class="mb-1"><strong>Phone:</strong> {{ customer.phone or 'Not provided' }}</p>
+                        <p class="mb-3"><strong>Username:</strong> @{{ customer.username }}</p>
+                        
+                        <h6 class="text-muted mb-2">Account Details</h6>
+                        <p class="mb-1"><strong>Registration:</strong> {{ customer.created_at.strftime('%B %d, %Y') }}</p>
+                        <p class="mb-1"><strong>Status:</strong> 
+                            {% if customer.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Request Statistics</h6>
+                        <p class="mb-1"><strong>Total Requests:</strong> {{ customer.service_requests|length }}</p>
+                        <p class="mb-1"><strong>Pending:</strong> {{ customer.service_requests | selectattr('status', 'equalto', 'pending') | list | length }}</p>
+                        <p class="mb-1"><strong>In Progress:</strong> {{ customer.service_requests | selectattr('status', 'equalto', 'in_progress') | list | length }}</p>
+                        <p class="mb-3"><strong>Completed:</strong> {{ customer.service_requests | selectattr('status', 'equalto', 'completed') | list | length }}</p>
+                        
+                        {% if customer.service_requests %}
+                        <h6 class="text-muted mb-2">Recent Requests</h6>
+                        <div class="list-group list-group-flush">
+                            {% for request in customer.service_requests[:3] %}
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ request.title[:30] }}{% if request.title|length > 30 %}...{% endif %}</h6>
+                                        <small class="text-muted">{{ request.service_type }}</small>
+                                    </div>
+                                    {% if request.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif request.status == 'in_progress' %}
+                                        <span class="badge bg-info">In Progress</span>
+                                    {% elif request.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('admin.requests') }}?customer={{ customer.id }}" class="btn btn-primary">
+                    View All Requests
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

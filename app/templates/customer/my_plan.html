@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}My Plan - Customer Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="h3 mb-1">My Plan</h2>
+                    <p class="text-muted mb-0">Manage your subscription plan and billing</p>
+                </div>
+                <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <!-- Current Plan Section -->
+            {% if current_plan %}
+            <div class="row mb-5">
+                <div class="col-lg-6 mx-auto">
+                    <div class="card border-0 shadow-sm {% if current_plan.is_popular %}border-primary{% endif %}">
+                        {% if current_plan.is_popular %}
+                        <div class="card-header bg-primary text-white text-center">
+                            <span class="badge bg-light text-primary">Most Popular</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-3">
+                                <span class="badge bg-success mb-2">Current Plan</span>
+                                <h4 class="card-title">{{ current_plan.plan_name }}</h4>
+                            </div>
+                            
+                            <div class="display-6 fw-bold text-primary mb-3">
+                                {{ current_plan.price }}
+                                {% if current_plan.price_period %}
+                                    <small class="fs-6 text-muted">{{ current_plan.price_period }}</small>
+                                {% endif %}
+                            </div>
+                            
+                            {% if current_plan.description %}
+                            <p class="text-muted mb-4">{{ current_plan.description }}</p>
+                            {% endif %}
+                            
+                            {% if current_plan.features %}
+                            <div class="text-start">
+                                <h6 class="text-muted mb-3">Plan Features:</h6>
+                                <ul class="list-unstyled">
+                                    {% for feature in current_plan.get_features_list() %}
+                                    <li class="mb-2">
+                                        <i class="bi bi-check-circle text-success me-2"></i>{{ feature }}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="row mb-5">
+                <div class="col-lg-6 mx-auto">
+                    <div class="alert alert-warning text-center">
+                        <i class="bi bi-exclamation-triangle fs-1 mb-3"></i>
+                        <h4>No Plan Selected</h4>
+                        <p>You haven't selected a plan yet. Choose one below to get started!</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Available Plans Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="mb-3">
+                        {% if current_plan %}
+                            Change Your Plan
+                        {% else %}
+                            Choose Your Plan
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted">
+                        {% if current_plan %}
+                            Upgrade or downgrade your plan at any time. Changes take effect immediately.
+                        {% else %}
+                            Select a plan that best fits your educational needs.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Plans Grid -->
+            <form method="POST" action="{{ url_for('customer.change_plan') }}" id="planChangeForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="row g-4 mb-4">
+                    {% for plan in all_plans %}
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card h-100 border-0 shadow-sm plan-option 
+                                    {% if plan.is_popular %}border-primary{% endif %}
+                                    {% if current_plan and plan.id == current_plan.id %}current-plan{% endif %}"
+                             onclick="selectPlan({{ plan.id }})">
+                            
+                            {% if plan.is_popular %}
+                            <div class="card-header bg-primary text-white text-center">
+                                <span class="badge bg-light text-primary">Most Popular</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="card-body p-4 text-center">
+                                <input type="radio" name="new_plan_id" value="{{ plan.id }}" 
+                                       id="plan_{{ plan.id }}" class="form-check-input d-none plan-radio"
+                                       {% if current_plan and plan.id == current_plan.id %}disabled{% endif %}>
+                                
+                                {% if current_plan and plan.id == current_plan.id %}
+                                <div class="badge bg-success mb-2">Current Plan</div>
+                                {% endif %}
+                                
+                                <h5 class="card-title">{{ plan.plan_name }}</h5>
+                                <div class="display-6 fw-bold text-primary mb-3">
+                                    {{ plan.price }}
+                                    {% if plan.price_period %}
+                                        <small class="fs-6 text-muted">{{ plan.price_period }}</small>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if plan.description %}
+                                <p class="text-muted mb-4">{{ plan.description }}</p>
+                                {% endif %}
+                                
+                                {% if plan.features %}
+                                <ul class="list-unstyled mb-4 text-start">
+                                    {% for feature in plan.get_features_list() %}
+                                    <li class="mb-2">
+                                        <i class="bi bi-check-circle text-success me-2"></i>{{ feature }}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                                
+                                {% if current_plan and plan.id == current_plan.id %}
+                                <button type="button" class="btn btn-success w-100" disabled>
+                                    <i class="bi bi-check-circle me-2"></i>Current Plan
+                                </button>
+                                {% else %}
+                                <div class="plan-select-indicator">
+                                    <span class="btn btn-outline-primary w-100">
+                                        Select This Plan
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <button type="submit" class="btn btn-primary btn-lg me-3" id="changePlanBtn" style="display: none;">
+                            <i class="bi bi-arrow-repeat me-2"></i>Change Plan
+                        </button>
+                        <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Plan Comparison Help -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="bi bi-info-circle me-2"></i>Plan Change Information
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled small">
+                                        <li><strong>Immediate Effect:</strong> Plan changes take effect immediately</li>
+                                        <li><strong>No Downtime:</strong> Your service continues uninterrupted</li>
+                                        <li><strong>Flexible:</strong> Change plans as often as needed</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled small">
+                                        <li><strong>Support:</strong> Contact us if you need help choosing</li>
+                                        <li><strong>Features:</strong> Higher plans include all lower plan features</li>
+                                        <li><strong>Custom Plans:</strong> Enterprise plans require consultation</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.plan-option {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #dee2e6;
+}
+
+.plan-option:hover:not(.current-plan) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.plan-option.selected {
+    border-color: #0d6efd;
+    background-color: #f8f9ff;
+}
+
+.plan-option.current-plan {
+    border-color: #198754;
+    background-color: #f8fff9;
+}
+
+.plan-option.current-plan .card-body {
+    background-color: #f8fff9;
+}
+
+.plan-select-indicator .btn {
+    transition: all 0.3s ease;
+}
+
+.plan-option.selected .plan-select-indicator .btn {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+</style>
+
+<script>
+function selectPlan(planId) {
+    // Don't allow selection of current plan
+    const planCard = document.querySelector(`#plan_${planId}`).closest('.plan-option');
+    if (planCard.classList.contains('current-plan')) {
+        return;
+    }
+    
+    // Remove selected class from all cards
+    document.querySelectorAll('.plan-option').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Uncheck all radio buttons
+    document.querySelectorAll('.plan-radio').forEach(radio => {
+        radio.checked = false;
+    });
+    
+    // Select the clicked plan
+    planCard.classList.add('selected');
+    document.querySelector(`#plan_${planId}`).checked = true;
+    
+    // Show the change plan button
+    document.getElementById('changePlanBtn').style.display = 'inline-block';
+}
+
+// Form submission confirmation
+document.getElementById('planChangeForm').addEventListener('submit', function(e) {
+    const selectedPlan = document.querySelector('.plan-radio:checked');
+    if (!selectedPlan) {
+        e.preventDefault();
+        alert('Please select a plan first.');
+        return;
+    }
+    
+    const planName = selectedPlan.closest('.plan-option').querySelector('.card-title').textContent;
+    if (!confirm(`Are you sure you want to change to the ${planName} plan?`)) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}
