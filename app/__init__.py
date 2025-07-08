@@ -2,7 +2,7 @@ from flask import Flask, request, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
-from flask_mail import Mail
+from flask_mailman import Mail # Changed from flask_mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_moment import Moment

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.models import db, User, ServiceRequest, ServicePricing, PasswordResetToken, Payment, CustomerAccount
@@ -107,12 +107,12 @@ def login():
 def register():
     if request.method == 'POST':
         username = sanitize_input(request.form.get('username', '').lower(), 80)
-        email = sanitize_input(request.form.get('email', '').lower(), 120)
+        email = sanitize_input(request.form.get('email', '').lower(), 120) # Keep sanitize
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
-        first_name = sanitize_input(request.form.get('first_name', ''), 50)
-        last_name = sanitize_input(request.form.get('last_name', ''), 50)
-        phone = sanitize_input(request.form.get('phone', ''), 20)
+        first_name = request.form.get('first_name', '').strip()[:50] # Remove sanitize, add strip and length limit
+        last_name = request.form.get('last_name', '').strip()[:50] # Remove sanitize, add strip and length limit
+        phone = sanitize_input(request.form.get('phone', ''), 20) # Keep sanitize
         selected_plan_id = request.form.get('selected_plan_id')
         
         pricing_plans = ServicePricing.query.filter_by(is_active=True).order_by(ServicePricing.display_order).all()
@@ -456,7 +456,8 @@ def edit_service_pricing(id):
             return redirect(url_for('admin.service_pricing'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error updating pricing plan: {str(e)}', 'danger')
+            current_app.logger.error(f"Error updating pricing plan {pricing.id if pricing else 'new'}: {str(e)}")
+            flash('Error updating pricing plan. Please check logs for details.', 'danger')
     
     # Convert features JSON back to text for editing
     features_text = ''
@@ -503,7 +504,8 @@ def new_service_pricing():
             return redirect(url_for('admin.service_pricing'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error creating pricing plan: {str(e)}', 'danger')
+            current_app.logger.error(f"Error creating new pricing plan: {str(e)}")
+            flash('Error creating pricing plan. Please check logs for details.', 'danger')
     
     return render_template('admin/edit_service_pricing.html', pricing=None, features_text='')
 
@@ -524,7 +526,8 @@ def delete_service_pricing(id):
         flash(f'Pricing plan "{plan_name}" deleted successfully!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Error deleting pricing plan: {str(e)}', 'danger')
+        current_app.logger.error(f"Error deleting pricing plan {id}: {str(e)}")
+        flash(f'Error deleting pricing plan "{plan_name}". Please check logs for details.', 'danger')
     
     return redirect(url_for('admin.service_pricing'))
 
@@ -1018,7 +1021,7 @@ def add_expense():
     if request.method == 'POST':
         category_id = request.form.get('category_id', type=int)
         amount = request.form.get('amount', type=float)
-        description = sanitize_input(request.form.get('description', ''), 200)
+        description = request.form.get('description', '').strip()[:200] # Remove sanitize, add strip and length limit
         expense_date = request.form.get('expense_date')
         is_tax_deductible = bool(request.form.get('is_tax_deductible'))
         
@@ -1057,7 +1060,8 @@ def add_expense():
                 errors.append('Invalid date format')
             except Exception as e:
                 db.session.rollback()
-                errors.append('Error saving expense. Please try again.')
+                current_app.logger.error(f"Error saving expense: {str(e)}")
+                errors.append('Error saving expense. Please check logs for details.')
         
         for error in errors:
             flash(error, 'danger')
@@ -1197,8 +1201,8 @@ def add_expense_category():
     
     from app.models import ExpenseCategory
     
-    name = sanitize_input(request.form.get('name', ''), 100)
-    description = sanitize_input(request.form.get('description', ''), 500)
+    name = request.form.get('name', '').strip()[:100] # Remove sanitize
+    description = request.form.get('description', '').strip()[:500] # Remove sanitize
     is_tax_deductible = bool(request.form.get('is_tax_deductible'))
     
     if name:
@@ -1232,8 +1236,8 @@ def edit_expense_category(category_id):
     
     category = ExpenseCategory.query.get_or_404(category_id)
     
-    name = sanitize_input(request.form.get('name', ''), 100)
-    description = sanitize_input(request.form.get('description', ''), 500)
+    name = request.form.get('name', '').strip()[:100] # Remove sanitize
+    description = request.form.get('description', '').strip()[:500] # Remove sanitize
     is_tax_deductible = bool(request.form.get('is_tax_deductible'))
     
     if name:
@@ -1324,7 +1328,7 @@ def mark_tax_paid(record_id):
     
     payment_amount = request.form.get('payment_amount', type=float)
     payment_date = request.form.get('payment_date')
-    notes = sanitize_input(request.form.get('notes', ''), 500)
+    notes = request.form.get('notes', '').strip()[:500] # Remove sanitize
     
     if payment_amount and payment_date:
         try:
@@ -1389,9 +1393,9 @@ def make_payment():
     
     if request.method == 'POST':
         amount = request.form.get('amount', type=float)
-        payment_method = sanitize_input(request.form.get('payment_method', ''), 50)
-        payment_reference = sanitize_input(request.form.get('payment_reference', ''), 200)
-        customer_notes = sanitize_input(request.form.get('customer_notes', ''), 500)
+        payment_method = sanitize_input(request.form.get('payment_method', ''), 50) # Keep sanitize
+        payment_reference = request.form.get('payment_reference', '').strip()[:200] # Remove sanitize
+        customer_notes = request.form.get('customer_notes', '').strip()[:500] # Remove sanitize
         service_request_id = request.form.get('service_request_id', type=int)
         
         errors = []
@@ -1497,7 +1501,7 @@ def process_payment(payment_id):
     
     payment = Payment.query.get_or_404(payment_id)
     action = request.form.get('action')
-    admin_notes = sanitize_input(request.form.get('admin_notes', ''), 500)
+    admin_notes = request.form.get('admin_notes', '').strip()[:500] # Remove sanitize
     
     if action == 'approve':
         payment.approve_payment(current_user, admin_notes)
