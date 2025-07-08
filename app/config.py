@@ -6,6 +6,9 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///educational_service.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PERMANENT_SESSION_LIFETIME = timedelta(hours=2)
+
+    # Debug mode setting
+    DEBUG = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
     
     # Security Configuration
     WTF_CSRF_ENABLED = True

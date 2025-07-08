@@ -1,3 +1,4 @@
+from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -87,20 +88,27 @@ class User(UserMixin, db.Model):
     def validate_password_strength(password):
         """Validate password meets security requirements"""
         errors = []
+        config = current_app.config
+
+        min_length = config.get('PASSWORD_MIN_LENGTH', 8)
+        require_uppercase = config.get('PASSWORD_REQUIRE_UPPERCASE', True)
+        require_lowercase = config.get('PASSWORD_REQUIRE_LOWERCASE', True)
+        require_numbers = config.get('PASSWORD_REQUIRE_NUMBERS', True)
+        require_special = config.get('PASSWORD_REQUIRE_SPECIAL', True)
+
+        if len(password) < min_length:
+            errors.append(f"Password must be at least {min_length} characters long")
         
-        if len(password) < 8:
-            errors.append("Password must be at least 8 characters long")
-        
-        if not re.search(r'[A-Z]', password):
+        if require_uppercase and not re.search(r'[A-Z]', password):
             errors.append("Password must contain at least one uppercase letter")
         
-        if not re.search(r'[a-z]', password):
+        if require_lowercase and not re.search(r'[a-z]', password):
             errors.append("Password must contain at least one lowercase letter")
         
-        if not re.search(r'\d', password):
+        if require_numbers and not re.search(r'\d', password):
             errors.append("Password must contain at least one number")
         
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        if require_special and not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
             errors.append("Password must contain at least one special character")
         
         return errors
