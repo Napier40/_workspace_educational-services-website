@@ -561,7 +561,7 @@ def dashboard():
     pending_payments = Payment.query.join(ServiceRequest)\
         .filter(ServiceRequest.customer_id == current_user.id)\
         .filter(Payment.status == 'pending')\
-        .order_by(Payment.created_at.desc()).all()
+        .order_by(Payment.submitted_at.desc()).all() # Corrected to submitted_at
     
     # Get statistics
     total_requests = ServiceRequest.query.filter_by(customer_id=current_user.id).count()
