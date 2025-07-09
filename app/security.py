@@ -2,7 +2,7 @@
 Security utilities and helpers
 """
 from flask import request, flash, current_app
-from flask_mail import Message
+# Removed: from flask_mail import Message
 from app import mail
 from app.models import LoginAttempt, PasswordResetToken, User, db
 from datetime import datetime
@@ -28,23 +28,20 @@ def is_ip_rate_limited(ip_address, max_attempts=10, window_minutes=15):
     return failed_attempts >= max_attempts
 
 
-def validate_password_strength(password):
-    """Validate password meets security requirements"""
-    return User.validate_password_strength(password)
+# def validate_password_strength(password): # Removed, use User.validate_password_strength directly
+#     """Validate password meets security requirements"""
+#     return User.validate_password_strength(password)
 
 
 def send_password_reset_email(user, token):
     """Send password reset email"""
     try:
-        msg = Message(
-            subject='Password Reset Request - Educational Services',
-            sender=current_app.config['MAIL_DEFAULT_SENDER'],
-            recipients=[user.email]
-        )
-        
+        subject = 'Password Reset Request - Educational Services'
+        sender = current_app.config['MAIL_DEFAULT_SENDER']
+        recipients = [user.email]
         reset_url = request.url_root.rstrip('/') + f'/auth/reset_password/{token.token}'
         
-        msg.html = f"""
+        html_body = f"""
         <html>
         <body>
             <h2>Password Reset Request</h2>
@@ -62,7 +59,7 @@ def send_password_reset_email(user, token):
         </html>
         """
         
-        msg.body = f"""
+        text_body = f"""
         Password Reset Request
         
         Hello {user.first_name},
@@ -80,7 +77,13 @@ def send_password_reset_email(user, token):
         Educational Services Team
         """
         
-        mail.send(msg)
+        mail.send_mail(
+            subject=subject,
+            message=text_body,
+            from_email=sender,
+            recipient_list=recipients,
+            html_message=html_body
+        )
         return True
     except Exception as e:
         current_app.logger.error(f"Failed to send password reset email: {str(e)}")
@@ -93,15 +96,12 @@ def send_email_verification(user):
         token = user.generate_email_verification_token()
         db.session.commit()
         
-        msg = Message(
-            subject='Verify Your Email - Educational Services',
-            sender=current_app.config['MAIL_DEFAULT_SENDER'],
-            recipients=[user.email]
-        )
-        
+        subject = 'Verify Your Email - Educational Services'
+        sender = current_app.config['MAIL_DEFAULT_SENDER']
+        recipients = [user.email]
         verify_url = request.url_root.rstrip('/') + f'/auth/verify_email/{token}'
         
-        msg.html = f"""
+        html_body = f"""
         <html>
         <body>
             <h2>Welcome to Educational Services!</h2>
@@ -118,7 +118,7 @@ def send_email_verification(user):
         </html>
         """
         
-        msg.body = f"""
+        text_body = f"""
         Welcome to Educational Services!
         
         Hello {user.first_name},
@@ -134,7 +134,13 @@ def send_email_verification(user):
         Educational Services Team
         """
         
-        mail.send(msg)
+        mail.send_mail(
+            subject=subject,
+            message=text_body,
+            from_email=sender,
+            recipient_list=recipients,
+            html_message=html_body
+        )
         return True
     except Exception as e:
         current_app.logger.error(f"Failed to send email verification: {str(e)}")

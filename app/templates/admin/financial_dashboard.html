@@ -182,7 +182,7 @@
                     {% if current_tax_record.due_date %}
                     <div class="alert alert-info mb-0">
                         <i class="bi bi-calendar-event me-2"></i>
-                        <strong>{{ _('Due Date') }}:</strong> {{ current_tax_record.due_date.strftime('%B %d, %Y') }}
+                        <strong>{{ _('Due Date') }}:</strong> {{ moment(current_tax_record.due_date).format('LL') }}
                         {% if current_tax_record.is_overdue() %}
                         <span class="badge bg-danger ms-2">{{ _('OVERDUE') }}</span>
                         {% endif %}
@@ -208,7 +208,7 @@
                                 <div>
                                     <div class="fw-bold">{{ expense.description }}</div>
                                     <div class="text-muted small">
-                                        {{ expense.category.name }} • {{ expense.get_formatted_date() }}
+                                        {{ expense.category.name }} • {{ moment(expense.expense_date).format('YYYY-MM-DD') }}
                                     </div>
                                 </div>
                                 <div class="text-end">
