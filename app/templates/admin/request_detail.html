@@ -74,13 +74,13 @@
                         <div class="col-md-6">
                             <h6 class="text-muted mb-2">Created</h6>
                             <p class="mb-0">
-                                <i class="bi bi-calendar me-2"></i>{{ request.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                <i class="bi bi-calendar me-2"></i>{{ moment(request.created_at).format('LLL') }}
                             </p>
                         </div>
                         <div class="col-md-6">
                             <h6 class="text-muted mb-2">Last Updated</h6>
                             <p class="mb-0">
-                                <i class="bi bi-clock me-2"></i>{{ request.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                <i class="bi bi-clock me-2"></i>{{ moment(request.updated_at).format('LLL') }} ({{ moment(request.updated_at).fromNow() }})
                             </p>
                         </div>
                     </div>
@@ -191,7 +191,7 @@
                         <div class="alert alert-info">
                             <strong>Estimated Time: {{ request.get_formatted_estimated_time() }}</strong>
                             {% if request.response_deadline %}
-                                <br><small>Deadline: {{ request.response_deadline.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                <br><small>Deadline: {{ moment(request.response_deadline).format('LLL') }} ({{ moment(request.response_deadline).calendar() }})</small>
                             {% endif %}
                         </div>
                         {% endif %}
@@ -286,7 +286,7 @@
                     <div class="mb-0">
                         <h6 class="text-muted mb-1">Member Since</h6>
                         <p class="mb-0">
-                            <i class="bi bi-calendar me-2"></i>{{ request.customer.created_at.strftime('%B %Y') }}
+                            <i class="bi bi-calendar me-2"></i>{{ moment(request.customer.created_at).format('MMMM YYYY') }}
                         </p>
                     </div>
                 </div>

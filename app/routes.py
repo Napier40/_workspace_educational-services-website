@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.models import db, User, ServiceRequest, ServicePricing, PasswordResetToken, Payment, CustomerAccount
-from app.security import (log_login_attempt, is_ip_rate_limited, validate_password_strength, 
+from app.security import (log_login_attempt, is_ip_rate_limited, # validate_password_strength removed
                          send_password_reset_email, send_email_verification, sanitize_input, is_safe_url)
 from app import limiter
 from datetime import datetime, timedelta
@@ -107,12 +107,12 @@ def login():
 def register():
     if request.method == 'POST':
         username = sanitize_input(request.form.get('username', '').lower(), 80)
-        email = sanitize_input(request.form.get('email', '').lower(), 120)
+        email = sanitize_input(request.form.get('email', '').lower(), 120) # Keep sanitize
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
-        first_name = sanitize_input(request.form.get('first_name', ''), 50)
-        last_name = sanitize_input(request.form.get('last_name', ''), 50)
-        phone = sanitize_input(request.form.get('phone', ''), 20)
+        first_name = request.form.get('first_name', '').strip()[:50] # Remove sanitize, add strip and length limit
+        last_name = request.form.get('last_name', '').strip()[:50] # Remove sanitize, add strip and length limit
+        phone = sanitize_input(request.form.get('phone', ''), 20) # Keep sanitize
         selected_plan_id = request.form.get('selected_plan_id')
         
         pricing_plans = ServicePricing.query.filter_by(is_active=True).order_by(ServicePricing.display_order).all()
@@ -130,7 +130,7 @@ def register():
             errors.append('Passwords do not match')
         
         # Password strength validation
-        password_errors = validate_password_strength(password)
+        password_errors = User.validate_password_strength(password) # Changed to User.method
         errors.extend(password_errors)
         
         if not first_name or not last_name:
@@ -244,7 +244,7 @@ def reset_password(token):
             errors.append('Passwords do not match')
         
         # Password strength validation
-        password_errors = validate_password_strength(password)
+        password_errors = User.validate_password_strength(password) # Changed to User.method
         errors.extend(password_errors)
         
         if errors:
@@ -397,7 +397,7 @@ def customers():
     customers = User.query.filter_by(role='customer').paginate(
         page=page, per_page=10, error_out=False)
     
-    # Calculate statistics
+    # These are used by the template for "New This Month" card
     current_month = datetime.utcnow().month
     current_year = datetime.utcnow().year
     
@@ -456,7 +456,8 @@ def edit_service_pricing(id):
             return redirect(url_for('admin.service_pricing'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error updating pricing plan: {str(e)}', 'danger')
+            current_app.logger.error(f"Error updating pricing plan {pricing.id if pricing else 'new'}: {str(e)}")
+            flash('Error updating pricing plan. Please check logs for details.', 'danger')
     
     # Convert features JSON back to text for editing
     features_text = ''
@@ -503,7 +504,8 @@ def new_service_pricing():
             return redirect(url_for('admin.service_pricing'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error creating pricing plan: {str(e)}', 'danger')
+            current_app.logger.error(f"Error creating new pricing plan: {str(e)}")
+            flash('Error creating pricing plan. Please check logs for details.', 'danger')
     
     return render_template('admin/edit_service_pricing.html', pricing=None, features_text='')
 
@@ -524,7 +526,8 @@ def delete_service_pricing(id):
         flash(f'Pricing plan "{plan_name}" deleted successfully!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Error deleting pricing plan: {str(e)}', 'danger')
+        current_app.logger.error(f"Error deleting pricing plan {id}: {str(e)}")
+        flash(f'Error deleting pricing plan "{plan_name}". Please check logs for details.', 'danger')
     
     return redirect(url_for('admin.service_pricing'))
 
@@ -540,7 +543,7 @@ def dashboard():
         ServiceRequest.created_at.desc()).limit(5).all()
     
     # Get service requests that need payment (no approved payment exists)
-    from sqlalchemy import and_, not_, exists
+    # from sqlalchemy import and_, not_, exists # Unused imports removed
     
     # Subquery to find service requests with approved payments
     approved_payment_subquery = db.session.query(Payment.service_request_id)\
@@ -558,7 +561,7 @@ def dashboard():
     pending_payments = Payment.query.join(ServiceRequest)\
         .filter(ServiceRequest.customer_id == current_user.id)\
         .filter(Payment.status == 'pending')\
-        .order_by(Payment.created_at.desc()).all()
+        .order_by(Payment.submitted_at.desc()).all() # Corrected to submitted_at
     
     # Get statistics
     total_requests = ServiceRequest.query.filter_by(customer_id=current_user.id).count()
@@ -652,8 +655,7 @@ def change_plan():
         flash('Error updating your plan. Please try again.', 'danger')
     
     return redirect(url_for('customer.my_plan'))
-    
-    return render_template('customer/new_request.html')
+    # Unreachable code removed: return render_template('customer/new_request.html')
 
 @customer_bp.route('/my_requests')
 @login_required
@@ -729,7 +731,7 @@ def approve_pricing(id):
 @login_required
 def reports_dashboard():
     """Admin reports dashboard"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -739,7 +741,7 @@ def reports_dashboard():
 @login_required
 def outstanding_tasks_report():
     """Outstanding tasks report ordered by priority"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -752,7 +754,7 @@ def outstanding_tasks_report():
 @login_required
 def income_report():
     """Income reports with period filtering"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -797,7 +799,7 @@ def income_report():
 @login_required
 def conversion_report():
     """Conversion rates report"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -810,7 +812,7 @@ def conversion_report():
 @login_required
 def top_customers_report():
     """Top customers report"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -834,7 +836,7 @@ def top_customers_report():
 @login_required
 def export_report(report_type):
     """Export reports to CSV"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -1018,7 +1020,7 @@ def add_expense():
     if request.method == 'POST':
         category_id = request.form.get('category_id', type=int)
         amount = request.form.get('amount', type=float)
-        description = sanitize_input(request.form.get('description', ''), 200)
+        description = request.form.get('description', '').strip()[:200] # Remove sanitize, add strip and length limit
         expense_date = request.form.get('expense_date')
         is_tax_deductible = bool(request.form.get('is_tax_deductible'))
         
@@ -1057,7 +1059,8 @@ def add_expense():
                 errors.append('Invalid date format')
             except Exception as e:
                 db.session.rollback()
-                errors.append('Error saving expense. Please try again.')
+                current_app.logger.error(f"Error saving expense: {str(e)}")
+                errors.append('Error saving expense. Please check logs for details.')
         
         for error in errors:
             flash(error, 'danger')
@@ -1197,8 +1200,8 @@ def add_expense_category():
     
     from app.models import ExpenseCategory
     
-    name = sanitize_input(request.form.get('name', ''), 100)
-    description = sanitize_input(request.form.get('description', ''), 500)
+    name = request.form.get('name', '').strip()[:100] # Remove sanitize
+    description = request.form.get('description', '').strip()[:500] # Remove sanitize
     is_tax_deductible = bool(request.form.get('is_tax_deductible'))
     
     if name:
@@ -1232,8 +1235,8 @@ def edit_expense_category(category_id):
     
     category = ExpenseCategory.query.get_or_404(category_id)
     
-    name = sanitize_input(request.form.get('name', ''), 100)
-    description = sanitize_input(request.form.get('description', ''), 500)
+    name = request.form.get('name', '').strip()[:100] # Remove sanitize
+    description = request.form.get('description', '').strip()[:500] # Remove sanitize
     is_tax_deductible = bool(request.form.get('is_tax_deductible'))
     
     if name:
@@ -1324,7 +1327,7 @@ def mark_tax_paid(record_id):
     
     payment_amount = request.form.get('payment_amount', type=float)
     payment_date = request.form.get('payment_date')
-    notes = sanitize_input(request.form.get('notes', ''), 500)
+    notes = request.form.get('notes', '').strip()[:500] # Remove sanitize
     
     if payment_amount and payment_date:
         try:
@@ -1389,9 +1392,9 @@ def make_payment():
     
     if request.method == 'POST':
         amount = request.form.get('amount', type=float)
-        payment_method = sanitize_input(request.form.get('payment_method', ''), 50)
-        payment_reference = sanitize_input(request.form.get('payment_reference', ''), 200)
-        customer_notes = sanitize_input(request.form.get('customer_notes', ''), 500)
+        payment_method = sanitize_input(request.form.get('payment_method', ''), 50) # Keep sanitize
+        payment_reference = request.form.get('payment_reference', '').strip()[:200] # Remove sanitize
+        customer_notes = request.form.get('customer_notes', '').strip()[:500] # Remove sanitize
         service_request_id = request.form.get('service_request_id', type=int)
         
         errors = []
@@ -1458,7 +1461,7 @@ def make_payment():
 @login_required
 def payments():
     """Admin payments management"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -1491,13 +1494,13 @@ def payments():
 @login_required
 def process_payment(payment_id):
     """Admin process payment (approve/reject)"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
     payment = Payment.query.get_or_404(payment_id)
     action = request.form.get('action')
-    admin_notes = sanitize_input(request.form.get('admin_notes', ''), 500)
+    admin_notes = request.form.get('admin_notes', '').strip()[:500] # Remove sanitize
     
     if action == 'approve':
         payment.approve_payment(current_user, admin_notes)
@@ -1523,7 +1526,7 @@ def process_payment(payment_id):
 @login_required
 def customer_accounts():
     """Admin customer accounts overview"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -1566,7 +1569,7 @@ def customer_accounts():
 @login_required
 def customer_account_detail(customer_id):
     """Admin view customer account details"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
