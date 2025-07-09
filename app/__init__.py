@@ -1,8 +1,8 @@
-from flask import Flask, request, session
+from flask import Flask, request, session, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
-from flask_mail import Mail
+from flask_mailman import Mail # Changed from flask_mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_moment import Moment
@@ -142,6 +142,22 @@ def create_app():
     # Create database tables
     with app.app_context():
         db.create_all()
+
+    # Error handlers
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return render_template('errors/403.html'), 403
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        # Important: rollback the session in case of a DB error that caused the 500
+        # This prevents the session from remaining in a broken state.
+        db.session.rollback()
+        return render_template('errors/500.html'), 500
         
         # Create default admin users if they don't exist
         from werkzeug.security import generate_password_hash
