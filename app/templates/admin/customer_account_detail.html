@@ -54,7 +54,7 @@
                     {% endif %}
                     <div class="mb-3">
                         <label class="form-label text-muted small">Member Since</label>
-                        <div>{{ customer.created_at.strftime('%B %d, %Y') }}</div>
+                        <div>{{ moment(customer.created_at).format('LL') }}</div>
                     </div>
                     <div class="mb-0">
                         <label class="form-label text-muted small">Account Status</label>
@@ -117,11 +117,11 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <label class="form-label text-muted small">Last Payment Date</label>
-                                <div>{{ account.last_payment_date.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                                <div>{{ moment(account.last_payment_date).format('LLL') }}</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted small">Account Last Updated</label>
-                                <div>{{ account.last_updated.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                                <div>{{ moment(account.last_updated).format('LLL') }} ({{ moment(account.last_updated).fromNow() }})</div>
                             </div>
                         </div>
                     </div>
@@ -160,8 +160,8 @@
                                 {% for payment in payments %}
                                 <tr>
                                     <td>
-                                        <div>{{ payment.submitted_at.strftime('%Y-%m-%d') }}</div>
-                                        <small class="text-muted">{{ payment.submitted_at.strftime('%H:%M') }}</small>
+                                        <div>{{ moment(payment.submitted_at).format('YYYY-MM-DD') }}</div>
+                                        <small class="text-muted">{{ moment(payment.submitted_at).format('HH:mm') }}</small>
                                     </td>
                                     <td class="fw-bold">{{ payment.get_formatted_amount() }}</td>
                                     <td>
@@ -181,7 +181,7 @@
                                             {{ payment.status.title() }}
                                         </span>
                                         {% if payment.processed_at %}
-                                        <br><small class="text-muted">{{ payment.processed_at.strftime('%m/%d %H:%M') }}</small>
+                                        <br><small class="text-muted">{{ moment(payment.processed_at).format('MM/DD HH:mm') }}</small>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -286,7 +286,7 @@
                                             {{ request.get_payment_status_text() }}
                                         </span>
                                     </td>
-                                    <td>{{ request.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ moment(request.created_at).format('YYYY-MM-DD') }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

@@ -49,3 +49,10 @@ class Config:
     LANGUAGES = ['en', 'pl']
     BABEL_DEFAULT_LOCALE = 'en'
     BABEL_DEFAULT_TIMEZONE = 'UTC'
+
+    # Logging Configuration
+    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
+    LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', 'logs/app.log') # Default path
+    # For RotatingFileHandler
+    LOG_MAX_BYTES = int(os.environ.get('LOG_MAX_BYTES', 1024 * 1024 * 10)) # 10 MB
+    LOG_BACKUP_COUNT = int(os.environ.get('LOG_BACKUP_COUNT', 5))

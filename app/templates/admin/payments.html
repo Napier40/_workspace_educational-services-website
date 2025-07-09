@@ -151,8 +151,8 @@
                         {% for payment in payments %}
                         <tr class="{% if payment.status == 'pending' %}table-warning{% endif %}">
                             <td>
-                                <div>{{ payment.submitted_at.strftime('%Y-%m-%d') }}</div>
-                                <small class="text-muted">{{ payment.submitted_at.strftime('%H:%M') }}</small>
+                                <div>{{ moment(payment.submitted_at).format('YYYY-MM-DD') }}</div>
+                                <small class="text-muted">{{ moment(payment.submitted_at).format('HH:mm') }}</small>
                             </td>
                             <td>
                                 <div class="fw-bold">{{ payment.customer.first_name }} {{ payment.customer.last_name }}</div>
@@ -176,7 +176,7 @@
                                     {{ payment.status.title() }}
                                 </span>
                                 {% if payment.processed_at %}
-                                <br><small class="text-muted">{{ payment.processed_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                 <br><small class="text-muted">{{ moment(payment.processed_at).format('YYYY-MM-DD HH:mm') }}</small>
                                 {% endif %}
                             </td>
                             <td>
