@@ -90,8 +90,6 @@ def create_app(config_class=Config):
     def inject_builtins():
         return dict(int=int, str=str, float=float, len=len)
     
-    # Mark the filter as safe for HTML output
-    from markupsafe import Markup
     @app.template_filter('nl2br_safe')
     def nl2br_safe_filter(text):
         """Convert newlines to HTML line breaks and mark as safe"""

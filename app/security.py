@@ -1,11 +1,11 @@
 """
 Security utilities and helpers
 """
-from flask import request, flash, current_app
+
 # Removed: from flask_mail import Message
 from app import mail
 from app.models import LoginAttempt, PasswordResetToken, User, db
-from datetime import datetime
+# from datetime import datetime # Removed
 import re
 
 

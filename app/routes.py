@@ -397,7 +397,7 @@ def customers():
     customers = User.query.filter_by(role='customer').paginate(
         page=page, per_page=10, error_out=False)
     
-    # Calculate statistics
+    # These are used by the template for "New This Month" card
     current_month = datetime.utcnow().month
     current_year = datetime.utcnow().year
     
@@ -543,7 +543,7 @@ def dashboard():
         ServiceRequest.created_at.desc()).limit(5).all()
     
     # Get service requests that need payment (no approved payment exists)
-    from sqlalchemy import and_, not_, exists
+    # from sqlalchemy import and_, not_, exists # Unused imports removed
     
     # Subquery to find service requests with approved payments
     approved_payment_subquery = db.session.query(Payment.service_request_id)\
@@ -655,8 +655,7 @@ def change_plan():
         flash('Error updating your plan. Please try again.', 'danger')
     
     return redirect(url_for('customer.my_plan'))
-    
-    return render_template('customer/new_request.html')
+    # Unreachable code removed: return render_template('customer/new_request.html')
 
 @customer_bp.route('/my_requests')
 @login_required
