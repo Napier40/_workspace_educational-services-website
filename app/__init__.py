@@ -90,8 +90,6 @@ def create_app(config_class=Config):
     def inject_builtins():
         return dict(int=int, str=str, float=float, len=len)
     
-    # The 'Markup' class is already imported at the top of the file.
-    # from markupsafe import Markup # This local import is redundant
     @app.template_filter('nl2br_safe')
     def nl2br_safe_filter(text):
         """Convert newlines to HTML line breaks and mark as safe"""
