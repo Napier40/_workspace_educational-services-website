@@ -28,9 +28,9 @@ def is_ip_rate_limited(ip_address, max_attempts=10, window_minutes=15):
     return failed_attempts >= max_attempts
 
 
-def validate_password_strength(password):
-    """Validate password meets security requirements"""
-    return User.validate_password_strength(password)
+# def validate_password_strength(password): # Removed, use User.validate_password_strength directly
+#     """Validate password meets security requirements"""
+#     return User.validate_password_strength(password)
 
 
 def send_password_reset_email(user, token):

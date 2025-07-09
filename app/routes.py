@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app.models import db, User, ServiceRequest, ServicePricing, PasswordResetToken, Payment, CustomerAccount
-from app.security import (log_login_attempt, is_ip_rate_limited, validate_password_strength, 
+from app.security import (log_login_attempt, is_ip_rate_limited, # validate_password_strength removed
                          send_password_reset_email, send_email_verification, sanitize_input, is_safe_url)
 from app import limiter
 from datetime import datetime, timedelta
@@ -130,7 +130,7 @@ def register():
             errors.append('Passwords do not match')
         
         # Password strength validation
-        password_errors = validate_password_strength(password)
+        password_errors = User.validate_password_strength(password) # Changed to User.method
         errors.extend(password_errors)
         
         if not first_name or not last_name:
@@ -244,7 +244,7 @@ def reset_password(token):
             errors.append('Passwords do not match')
         
         # Password strength validation
-        password_errors = validate_password_strength(password)
+        password_errors = User.validate_password_strength(password) # Changed to User.method
         errors.extend(password_errors)
         
         if errors:
@@ -561,7 +561,7 @@ def dashboard():
     pending_payments = Payment.query.join(ServiceRequest)\
         .filter(ServiceRequest.customer_id == current_user.id)\
         .filter(Payment.status == 'pending')\
-        .order_by(Payment.created_at.desc()).all()
+        .order_by(Payment.submitted_at.desc()).all() # Corrected to submitted_at
     
     # Get statistics
     total_requests = ServiceRequest.query.filter_by(customer_id=current_user.id).count()
@@ -732,7 +732,7 @@ def approve_pricing(id):
 @login_required
 def reports_dashboard():
     """Admin reports dashboard"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -742,7 +742,7 @@ def reports_dashboard():
 @login_required
 def outstanding_tasks_report():
     """Outstanding tasks report ordered by priority"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -755,7 +755,7 @@ def outstanding_tasks_report():
 @login_required
 def income_report():
     """Income reports with period filtering"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -800,7 +800,7 @@ def income_report():
 @login_required
 def conversion_report():
     """Conversion rates report"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -813,7 +813,7 @@ def conversion_report():
 @login_required
 def top_customers_report():
     """Top customers report"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -837,7 +837,7 @@ def top_customers_report():
 @login_required
 def export_report(report_type):
     """Export reports to CSV"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -1462,7 +1462,7 @@ def make_payment():
 @login_required
 def payments():
     """Admin payments management"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -1495,7 +1495,7 @@ def payments():
 @login_required
 def process_payment(payment_id):
     """Admin process payment (approve/reject)"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -1527,7 +1527,7 @@ def process_payment(payment_id):
 @login_required
 def customer_accounts():
     """Admin customer accounts overview"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
@@ -1570,7 +1570,7 @@ def customer_accounts():
 @login_required
 def customer_account_detail(customer_id):
     """Admin view customer account details"""
-    if current_user.role != 'admin':
+    if not current_user.is_admin():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     

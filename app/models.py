@@ -413,11 +413,12 @@ class ServiceRequest(db.Model):
         """Check if this service request has been fully paid for."""
         # This will now correctly reflect full payment due to payment_status change
         return self.payment_status == 'paid'
-    
-    @property
-    def final_cost(self):
-        """Alias for total_price to maintain compatibility."""
-        return self.total_price
+
+    # Removed unused final_cost property
+    # @property
+    # def final_cost(self):
+    #     """Alias for total_price to maintain compatibility."""
+    #     return self.total_price
 
     def get_payment_status_badge_class(self):
         """Return Bootstrap badge class for payment status"""
@@ -748,9 +749,7 @@ class BusinessExpense(db.Model):
         """Return formatted amount string"""
         return f"${self.amount:.2f}"
     
-    def get_formatted_date(self):
-        """Return formatted expense date"""
-        return self.expense_date.strftime('%Y-%m-%d')
+    # Removed get_formatted_date(), as templates now use Flask-Moment for expense_date
     
     @classmethod
     def get_total_expenses(cls, start_date=None, end_date=None, tax_deductible_only=False):
