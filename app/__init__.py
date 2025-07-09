@@ -1,3 +1,6 @@
+import logging
+from logging.handlers import RotatingFileHandler
+import os
 from flask import Flask, request, session, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -27,6 +30,31 @@ def create_app():
     
     # Initialize extensions
     db.init_app(app)
+
+    # Configure Logging
+    if not app.debug and not app.testing: # Don't configure file logging if debug or testing
+        log_dir = os.path.dirname(app.config['LOG_FILE_PATH'])
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+
+        file_handler = RotatingFileHandler(
+            app.config['LOG_FILE_PATH'],
+            maxBytes=app.config['LOG_MAX_BYTES'],
+            backupCount=app.config['LOG_BACKUP_COUNT']
+        )
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        ))
+        file_handler.setLevel(app.config['LOG_LEVEL'])
+
+        # Remove default Flask handler if it exists
+        if app.logger.hasHandlers():
+            app.logger.handlers.clear()
+
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(app.config['LOG_LEVEL'])
+        app.logger.info('Application logging configured to file.')
+
     csrf.init_app(app)
     mail.init_app(app)
     moment.init_app(app)
