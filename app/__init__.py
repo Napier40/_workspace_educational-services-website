@@ -90,14 +90,6 @@ def create_app():
     def inject_builtins():
         return dict(int=int, str=str, float=float, len=len)
     
-    # Add custom Jinja2 filters
-    @app.template_filter('nl2br')
-    def nl2br_filter(text):
-        """Convert newlines to HTML line breaks"""
-        if text is None:
-            return ''
-        return text.replace('\n', '<br>\n')
-    
     # Mark the filter as safe for HTML output
     from markupsafe import Markup
     @app.template_filter('nl2br_safe')
@@ -107,32 +99,7 @@ def create_app():
             return ''
         return Markup(text.replace('\n', '<br>\n'))
     
-    # Add moment-like function for date formatting
-    from datetime import datetime
-    
-    class MomentJS:
-        def __init__(self, timestamp=None):
-            if timestamp is None:
-                self.timestamp = datetime.utcnow()
-            else:
-                self.timestamp = timestamp
-                
-        def format(self, format_string):
-            """Simple date formatting - convert moment.js format to Python strftime"""
-            # Convert common moment.js formats to Python strftime
-            format_map = {
-                'MMMM Do YYYY, h:mm:ss a': '%B %d %Y, %I:%M:%S %p',
-                'MMMM YYYY': '%B %Y',
-                'YYYY-MM-DD': '%Y-%m-%d',
-                'MM/DD/YYYY': '%m/%d/%Y',
-                'DD/MM/YYYY': '%d/%m/%Y'
-            }
-            
-            python_format = format_map.get(format_string, format_string)
-            return self.timestamp.strftime(python_format)
-    
-    # Add moment function to template globals
-    app.jinja_env.globals['moment'] = lambda timestamp=None: MomentJS(timestamp)
+    # login_manager configuration (Flask-Moment setup will be handled by its init_app and template includes)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'info'

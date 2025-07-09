@@ -384,31 +384,34 @@ class ServiceRequest(db.Model):
     
     @property
     def payment_status(self):
-        """Get the current payment status for this service request."""
+        """
+        Property to get the current payment status for this service request.
+        Aligns with the logic of get_payment_status() method.
+        """
         if not self.total_price or self.total_price <= 0:
-            return 'no_payment_required'
+            return 'no_payment_required' # Or 'no_charge' to match get_payment_status()
         
-        approved_payment = Payment.query.filter_by(
-            service_request_id=self.id,
-            status='approved'
-        ).first()
-        
-        if approved_payment:
+        if self.is_fully_paid(): # is_fully_paid correctly uses get_outstanding_amount()
             return 'paid'
         
+        # Check for any pending payments if not fully paid
         pending_payment = Payment.query.filter_by(
             service_request_id=self.id,
             status='pending'
         ).first()
-        
         if pending_payment:
             return 'pending'
-        
+
+        # Check if partially paid
+        if self.get_total_payments('approved') > 0:
+            return 'partial' # Added partial state consistent with get_payment_status()
+
         return 'unpaid'
     
     @property
     def is_paid(self):
-        """Check if this service request has been paid for."""
+        """Check if this service request has been fully paid for."""
+        # This will now correctly reflect full payment due to payment_status change
         return self.payment_status == 'paid'
     
     @property
@@ -457,13 +460,14 @@ class ServicePricing(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def get_features_list(self):
-        """Return features as a list"""
+        """Return features as a list. Expects features to be a valid JSON string."""
         if self.features:
-            import json
+            import json # Keep local import for clarity or move to top if used elsewhere in class
             try:
                 return json.loads(self.features)
-            except:
-                return self.features.split('\n') if self.features else []
+            except json.JSONDecodeError as e:
+                current_app.logger.error(f"Failed to decode features JSON for ServicePricing ID {self.id}: {e}. Features string: '{self.features}'")
+                return [] # Return empty list or handle error as appropriate
         return []
     
     def set_features_list(self, features_list):

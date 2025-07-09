@@ -88,7 +88,7 @@
                                 {% if request.response_deadline %}
                                 <div class="col-md-6">
                                     <strong>Expected Completion:</strong><br>
-                                    {{ request.response_deadline.strftime('%B %d, %Y at %I:%M %p') }}
+                                    {{ moment(request.response_deadline).format('LLL') }} ({{ moment(request.response_deadline).calendar() }})
                                     {% if request.is_estimated_time_overdue() %}
                                         <br><span class="badge bg-danger">Overdue</span>
                                     {% endif %}
@@ -169,13 +169,13 @@
                         <div class="col-md-6">
                             <h6 class="text-muted mb-2">Submitted</h6>
                             <p class="mb-0">
-                                <i class="bi bi-calendar me-2"></i>{{ request.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                <i class="bi bi-calendar me-2"></i>{{ moment(request.created_at).format('LLL') }}
                             </p>
                         </div>
                         <div class="col-md-6">
                             <h6 class="text-muted mb-2">Last Updated</h6>
                             <p class="mb-0">
-                                <i class="bi bi-clock me-2"></i>{{ request.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                <i class="bi bi-clock me-2"></i>{{ moment(request.updated_at).format('LLL') }} ({{ moment(request.updated_at).fromNow() }})
                             </p>
                         </div>
                     </div>
@@ -196,7 +196,7 @@
                             <div class="timeline-content">
                                 <h6 class="mb-1">Request Submitted</h6>
                                 <p class="text-muted mb-1">Your service request was successfully submitted and is awaiting review.</p>
-                                <small class="text-muted">{{ request.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                <small class="text-muted">{{ moment(request.created_at).format('LLL') }}</small>
                             </div>
                         </div>
                         
@@ -206,7 +206,7 @@
                             <div class="timeline-content">
                                 <h6 class="mb-1">Request Under Review</h6>
                                 <p class="text-muted mb-1">Our team is reviewing your request and matching you with the right tutor.</p>
-                                <small class="text-muted">{{ request.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                <small class="text-muted">{{ moment(request.updated_at).format('LLL') }}</small>
                             </div>
                         </div>
                         {% endif %}
@@ -220,7 +220,7 @@
                                 {% if request.assigned_admin %}
                                     <p class="text-muted mb-1">Assigned to: {{ request.assigned_admin.first_name }} {{ request.assigned_admin.last_name }}</p>
                                 {% endif %}
-                                <small class="text-muted">{{ request.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                <small class="text-muted">{{ moment(request.updated_at).format('LLL') }}</small>
                             </div>
                         </div>
                         {% endif %}
@@ -231,7 +231,7 @@
                             <div class="timeline-content">
                                 <h6 class="mb-1">Request Completed</h6>
                                 <p class="text-muted mb-1">Your service request has been successfully completed!</p>
-                                <small class="text-muted">{{ request.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                <small class="text-muted">{{ moment(request.updated_at).format('LLL') }}</small>
                             </div>
                         </div>
                         {% endif %}
@@ -242,7 +242,7 @@
                             <div class="timeline-content">
                                 <h6 class="mb-1">Request Cancelled</h6>
                                 <p class="text-muted mb-1">This request has been cancelled.</p>
-                                <small class="text-muted">{{ request.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                <small class="text-muted">{{ moment(request.updated_at).format('LLL') }}</small>
                             </div>
                         </div>
                         {% endif %}
