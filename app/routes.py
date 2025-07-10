@@ -381,6 +381,17 @@ def update_request(id):
     # Calculate completion deadline
     if service_request.estimated_response_days or service_request.estimated_response_hours:
         service_request.calculate_response_deadline()
+
+    # Handle admin_set_deadline
+    admin_set_deadline_str = request.form.get('admin_set_deadline')
+    if admin_set_deadline_str:
+        try:
+            service_request.admin_set_deadline = datetime.strptime(admin_set_deadline_str, '%Y-%m-%d')
+        except ValueError:
+            flash('Invalid Admin Set Deadline format. Please use YYYY-MM-DD.', 'warning') # Changed to warning as it's not a critical failure for the whole update
+            # Potentially log this error as well
+    else:
+        service_request.admin_set_deadline = None # Allow clearing the deadline
     
     db.session.commit()
     flash('Request updated successfully!', 'success')
@@ -587,13 +598,26 @@ def new_request():
         description = request.form['description']
         service_type = request.form['service_type']
         priority = request.form['priority']
+        customer_proposed_deadline_str = request.form.get('customer_proposed_deadline')
         
+        customer_proposed_deadline_obj = None
+        if customer_proposed_deadline_str:
+            try:
+                customer_proposed_deadline_obj = datetime.strptime(customer_proposed_deadline_str, '%Y-%m-%d')
+            except ValueError:
+                flash('Invalid proposed delivery date format. Please use YYYY-MM-DD.', 'danger')
+                # It might be better to return render_template here with form data preserved
+                # For now, let's assume valid input or rely on browser date picker.
+                # If an error occurs, it will be None and not saved.
+                pass
+
         service_request = ServiceRequest(
             title=title,
             description=description,
             service_type=service_type,
             priority=priority,
-            customer_id=current_user.id
+            customer_id=current_user.id,
+            customer_proposed_deadline=customer_proposed_deadline_obj
         )
         
         db.session.add(service_request)
