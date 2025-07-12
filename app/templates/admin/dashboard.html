@@ -163,7 +163,7 @@
                                                     </small>
                                                 {% elif request.response_deadline %}
                                                     <small class="text-muted">
-                                                        Due: {{ request.response_deadline.strftime('%m/%d') }}
+                                                        {{ _('Due') }}: {{ moment(request.response_deadline).format('MM/DD') }}
                                                     </small>
                                                 {% endif %}
                                             {% else %}
@@ -182,7 +182,7 @@
                                                 <span class="text-muted">Not set</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ request.created_at.strftime('%m/%d/%Y') }}</td>
+                                        <td>{{ moment(request.created_at).format('L') }}</td>
                                         <td>
                                             <a href="{{ url_for('admin.request_detail', id=request.id) }}" 
                                                class="btn btn-sm btn-outline-primary">

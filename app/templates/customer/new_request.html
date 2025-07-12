@@ -64,6 +64,15 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div class="mb-4">
+                            <label for="customer_proposed_deadline" class="form-label">{{ _('Proposed Delivery Date (Optional)') }}</label>
+                            <input type="date" class="form-control" id="customer_proposed_deadline" name="customer_proposed_deadline"
+                                   min="{{ (datetime.utcnow() + timedelta(days=1)).strftime('%Y-%m-%d') }}">
+                            <div class="form-text">
+                                {{ _('If you have a specific date by which you ideally need this service completed, please select it.') }}
+                            </div>
+                        </div>
                         
                         <div class="mb-4">
                             <label for="description" class="form-label">Detailed Description <span class="text-danger">*</span></label>
