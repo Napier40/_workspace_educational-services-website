@@ -1,8 +1,9 @@
+from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func # Removed unused 'and_', 'or_'
 import secrets
 import re
 
@@ -87,20 +88,27 @@ class User(UserMixin, db.Model):
     def validate_password_strength(password):
         """Validate password meets security requirements"""
         errors = []
+        config = current_app.config
+
+        min_length = config.get('PASSWORD_MIN_LENGTH', 8)
+        require_uppercase = config.get('PASSWORD_REQUIRE_UPPERCASE', True)
+        require_lowercase = config.get('PASSWORD_REQUIRE_LOWERCASE', True)
+        require_numbers = config.get('PASSWORD_REQUIRE_NUMBERS', True)
+        require_special = config.get('PASSWORD_REQUIRE_SPECIAL', True)
+
+        if len(password) < min_length:
+            errors.append(f"Password must be at least {min_length} characters long")
         
-        if len(password) < 8:
-            errors.append("Password must be at least 8 characters long")
-        
-        if not re.search(r'[A-Z]', password):
+        if require_uppercase and not re.search(r'[A-Z]', password):
             errors.append("Password must contain at least one uppercase letter")
         
-        if not re.search(r'[a-z]', password):
+        if require_lowercase and not re.search(r'[a-z]', password):
             errors.append("Password must contain at least one lowercase letter")
         
-        if not re.search(r'\d', password):
+        if require_numbers and not re.search(r'\d', password):
             errors.append("Password must contain at least one number")
         
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        if require_special and not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
             errors.append("Password must contain at least one special character")
         
         return errors
@@ -184,7 +192,7 @@ class ServiceRequest(db.Model):
     assigned_admin_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    due_date = db.Column(db.DateTime)
+    # due_date = db.Column(db.DateTime) # Removed as unused and superseded by new deadline fields
     notes = db.Column(db.Text)
     
     # Pricing fields
@@ -197,8 +205,12 @@ class ServiceRequest(db.Model):
     # Estimated time fields
     estimated_response_days = db.Column(db.Integer, default=0)  # Days to complete task
     estimated_response_hours = db.Column(db.Integer, default=0)  # Additional hours (0-23)
-    response_deadline = db.Column(db.DateTime)  # Calculated deadline for completion
+    response_deadline = db.Column(db.DateTime, nullable=True)  # Calculated deadline for completion (made nullable for clarity)
     response_time_notes = db.Column(db.Text)  # Admin notes about estimated time
+
+    # New deadline fields
+    customer_proposed_deadline = db.Column(db.DateTime, nullable=True) # Proposed by customer
+    admin_set_deadline = db.Column(db.DateTime, nullable=True) # Set by admin, official deadline
     
     # Relationship with assigned admin
     assigned_admin = db.relationship('User', foreign_keys=[assigned_admin_id])
@@ -376,37 +388,41 @@ class ServiceRequest(db.Model):
     
     @property
     def payment_status(self):
-        """Get the current payment status for this service request."""
+        """
+        Property to get the current payment status for this service request.
+        Aligns with the logic of get_payment_status() method.
+        """
         if not self.total_price or self.total_price <= 0:
-            return 'no_payment_required'
+            return 'no_payment_required' # Or 'no_charge' to match get_payment_status()
         
-        approved_payment = Payment.query.filter_by(
-            service_request_id=self.id,
-            status='approved'
-        ).first()
-        
-        if approved_payment:
+        if self.is_fully_paid(): # is_fully_paid correctly uses get_outstanding_amount()
             return 'paid'
         
+        # Check for any pending payments if not fully paid
         pending_payment = Payment.query.filter_by(
             service_request_id=self.id,
             status='pending'
         ).first()
-        
         if pending_payment:
             return 'pending'
-        
+
+        # Check if partially paid
+        if self.get_total_payments('approved') > 0:
+            return 'partial' # Added partial state consistent with get_payment_status()
+
         return 'unpaid'
     
     @property
     def is_paid(self):
-        """Check if this service request has been paid for."""
+        """Check if this service request has been fully paid for."""
+        # This will now correctly reflect full payment due to payment_status change
         return self.payment_status == 'paid'
-    
-    @property
-    def final_cost(self):
-        """Alias for total_price to maintain compatibility."""
-        return self.total_price
+
+    # Removed unused final_cost property
+    # @property
+    # def final_cost(self):
+    #     """Alias for total_price to maintain compatibility."""
+    #     return self.total_price
 
     def get_payment_status_badge_class(self):
         """Return Bootstrap badge class for payment status"""
@@ -449,13 +465,14 @@ class ServicePricing(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def get_features_list(self):
-        """Return features as a list"""
+        """Return features as a list. Expects features to be a valid JSON string."""
         if self.features:
-            import json
+            import json # Keep local import for clarity or move to top if used elsewhere in class
             try:
                 return json.loads(self.features)
-            except:
-                return self.features.split('\n') if self.features else []
+            except json.JSONDecodeError as e:
+                current_app.logger.error(f"Failed to decode features JSON for ServicePricing ID {self.id}: {e}. Features string: '{self.features}'")
+                return [] # Return empty list or handle error as appropriate
         return []
     
     def set_features_list(self, features_list):
@@ -736,9 +753,7 @@ class BusinessExpense(db.Model):
         """Return formatted amount string"""
         return f"${self.amount:.2f}"
     
-    def get_formatted_date(self):
-        """Return formatted expense date"""
-        return self.expense_date.strftime('%Y-%m-%d')
+    # Removed get_formatted_date(), as templates now use Flask-Moment for expense_date
     
     @classmethod
     def get_total_expenses(cls, start_date=None, end_date=None, tax_deductible_only=False):

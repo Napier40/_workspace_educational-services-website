@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Forbidden') }} - {{ super() }}{% endblock %}
+
+{% block page_content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-1">{{ _('403') }}</h1>
+            <h2>{{ _('Access Forbidden') }}</h2>
+            <p class="lead">
+                {{ _("Sorry, you don't have permission to access this page.") }}
+            </p>
+            <hr class="my-4">
+            <p>
+                {{ _('If you believe you should have access, please contact support or try logging in with appropriate credentials.') }}
+            </p>
+            <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg">{{ _('Go to Homepage') }}</a>
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-secondary btn-lg">{{ _('Login') }}</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

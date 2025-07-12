@@ -1,8 +1,12 @@
-from flask import Flask, request, session
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+from datetime import datetime, timedelta # Added import
+from flask import Flask, request, session, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
-from flask_mail import Mail
+from flask_mailman import Mail # Changed from flask_mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_moment import Moment
@@ -21,12 +25,37 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"]
 )
 
-def create_app():
+def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_class)
     
     # Initialize extensions
     db.init_app(app)
+
+    # Configure Logging
+    if not app.debug and not app.testing: # Don't configure file logging if debug or testing
+        log_dir = os.path.dirname(app.config['LOG_FILE_PATH'])
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+
+        file_handler = RotatingFileHandler(
+            app.config['LOG_FILE_PATH'],
+            maxBytes=app.config['LOG_MAX_BYTES'],
+            backupCount=app.config['LOG_BACKUP_COUNT']
+        )
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        ))
+        file_handler.setLevel(app.config['LOG_LEVEL'])
+
+        # Remove default Flask handler if it exists
+        if app.logger.hasHandlers():
+            app.logger.handlers.clear()
+
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(app.config['LOG_LEVEL'])
+        app.logger.info('Application logging configured to file.')
+
     csrf.init_app(app)
     mail.init_app(app)
     moment.init_app(app)
@@ -60,18 +89,10 @@ def create_app():
     # Add built-in functions to template context
     @app.context_processor
     def inject_builtins():
-        return dict(int=int, str=str, float=float, len=len)
+        return dict(int=int, str=str, float=float, len=len, datetime=datetime, timedelta=timedelta)
     
-    # Add custom Jinja2 filters
-    @app.template_filter('nl2br')
-    def nl2br_filter(text):
-        """Convert newlines to HTML line breaks"""
-        if text is None:
-            return ''
-        return text.replace('\n', '<br>\n')
-    
-    # Mark the filter as safe for HTML output
-    from markupsafe import Markup
+    # The 'Markup' class is already imported at the top of the file.
+    # from markupsafe import Markup # This local import is redundant
     @app.template_filter('nl2br_safe')
     def nl2br_safe_filter(text):
         """Convert newlines to HTML line breaks and mark as safe"""
@@ -79,32 +100,7 @@ def create_app():
             return ''
         return Markup(text.replace('\n', '<br>\n'))
     
-    # Add moment-like function for date formatting
-    from datetime import datetime
-    
-    class MomentJS:
-        def __init__(self, timestamp=None):
-            if timestamp is None:
-                self.timestamp = datetime.utcnow()
-            else:
-                self.timestamp = timestamp
-                
-        def format(self, format_string):
-            """Simple date formatting - convert moment.js format to Python strftime"""
-            # Convert common moment.js formats to Python strftime
-            format_map = {
-                'MMMM Do YYYY, h:mm:ss a': '%B %d %Y, %I:%M:%S %p',
-                'MMMM YYYY': '%B %Y',
-                'YYYY-MM-DD': '%Y-%m-%d',
-                'MM/DD/YYYY': '%m/%d/%Y',
-                'DD/MM/YYYY': '%d/%m/%Y'
-            }
-            
-            python_format = format_map.get(format_string, format_string)
-            return self.timestamp.strftime(python_format)
-    
-    # Add moment function to template globals
-    app.jinja_env.globals['moment'] = lambda timestamp=None: MomentJS(timestamp)
+    # login_manager configuration (Flask-Moment setup will be handled by its init_app and template includes)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'info'
@@ -142,28 +138,26 @@ def create_app():
     # Create database tables
     with app.app_context():
         db.create_all()
-        
-        # Create default admin users if they don't exist
-        from werkzeug.security import generate_password_hash
-        admin_users = [
-            {'username': 'john', 'email': 'john@admin.com', 'first_name': 'John', 'last_name': 'Admin'},
-            {'username': 'kamila', 'email': 'kamila@admin.com', 'first_name': 'Kamila', 'last_name': 'Admin'}
-        ]
-        
-        from app.models import User
-        for admin_data in admin_users:
-            existing_user = User.query.filter_by(username=admin_data['username']).first()
-            if not existing_user:
-                admin_user = User(
-                    username=admin_data['username'],
-                    email=admin_data['email'],
-                    first_name=admin_data['first_name'],
-                    last_name=admin_data['last_name'],
-                    role='admin'
-                )
-                admin_user.set_password('Johnston')
-                db.session.add(admin_user)
-        
-        db.session.commit()
+        # Admin user seeding is now handled by the 'flask seed' CLI command
+
+    # Register CLI commands
+    from . import cli
+    cli.init_app(app)
+
+    # Error handlers
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return render_template('errors/403.html'), 403
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        # Important: rollback the session in case of a DB error that caused the 500
+        # This prevents the session from remaining in a broken state.
+        db.session.rollback()
+        return render_template('errors/500.html'), 500
     
     return app
