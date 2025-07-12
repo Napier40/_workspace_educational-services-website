@@ -156,7 +156,7 @@ def create_app(config_class=Config):
         return render_template('errors/500.html'), 500
         
         # Create default admin users if they don't exist
-        from werkzeug.security import generate_password_hash
+        # from werkzeug.security import generate_password_hash # No longer needed here
         admin_users = [
             {'username': 'john', 'email': 'john@admin.com', 'first_name': 'John', 'last_name': 'Admin'},
             {'username': 'kamila', 'email': 'kamila@admin.com', 'first_name': 'Kamila', 'last_name': 'Admin'}
