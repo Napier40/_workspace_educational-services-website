@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 # from werkzeug.security import check_password_hash # Unused in this file directly
-from app.models import (db, User, ServiceRequest, ServicePricing, PasswordResetToken,
-                        Payment, CustomerAccount, BusinessExpense, ExpenseCategory,
+from app.models import (db, User, ServiceRequest, ServicePricing, PasswordResetToken, 
+                        Payment, CustomerAccount, BusinessExpense, ExpenseCategory, 
                         TaxRecord, FinancialSummary)
 from app.security import (log_login_attempt, is_ip_rate_limited, # validate_password_strength removed
                          send_password_reset_email, send_email_verification, sanitize_input, is_safe_url)
@@ -611,7 +611,7 @@ def new_request():
                 # It might be better to return render_template here with form data preserved
                 # For now, let's assume valid input or rely on browser date picker.
                 # If an error occurs, it will be None and not saved.
-                pass
+                pass 
 
         service_request = ServiceRequest(
             title=title,
@@ -711,9 +711,9 @@ def profile():
         return redirect(url_for('admin.dashboard'))
     
     if request.method == 'POST':
-        current_user.first_name = request.form['first_name']
-        current_user.last_name = request.form['last_name']
-        current_user.email = request.form['email']
+        current_user.first_name = request.form.get('first_name')
+        current_user.last_name = request.form.get('last_name')
+        current_user.email = request.form.get('email')
         current_user.phone = request.form.get('phone', '')
         
         # Check if password is being updated
