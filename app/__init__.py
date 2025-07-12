@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from datetime import datetime, timedelta # Added import
 from flask import Flask, request, session, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -88,8 +89,10 @@ def create_app(config_class=Config):
     # Add built-in functions to template context
     @app.context_processor
     def inject_builtins():
-        return dict(int=int, str=str, float=float, len=len)
+        return dict(int=int, str=str, float=float, len=len, datetime=datetime, timedelta=timedelta)
     
+    # The 'Markup' class is already imported at the top of the file.
+    # from markupsafe import Markup # This local import is redundant
     @app.template_filter('nl2br_safe')
     def nl2br_safe_filter(text):
         """Convert newlines to HTML line breaks and mark as safe"""

@@ -192,7 +192,7 @@ class ServiceRequest(db.Model):
     assigned_admin_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    due_date = db.Column(db.DateTime)
+    # due_date = db.Column(db.DateTime) # Removed as unused and superseded by new deadline fields
     notes = db.Column(db.Text)
     
     # Pricing fields
@@ -205,8 +205,12 @@ class ServiceRequest(db.Model):
     # Estimated time fields
     estimated_response_days = db.Column(db.Integer, default=0)  # Days to complete task
     estimated_response_hours = db.Column(db.Integer, default=0)  # Additional hours (0-23)
-    response_deadline = db.Column(db.DateTime)  # Calculated deadline for completion
+    response_deadline = db.Column(db.DateTime, nullable=True)  # Calculated deadline for completion (made nullable for clarity)
     response_time_notes = db.Column(db.Text)  # Admin notes about estimated time
+
+    # New deadline fields
+    customer_proposed_deadline = db.Column(db.DateTime, nullable=True) # Proposed by customer
+    admin_set_deadline = db.Column(db.DateTime, nullable=True) # Set by admin, official deadline
     
     # Relationship with assigned admin
     assigned_admin = db.relationship('User', foreign_keys=[assigned_admin_id])
