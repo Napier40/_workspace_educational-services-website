@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func # Removed unused 'and_', 'or_'
 import secrets
 import re
 

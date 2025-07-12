@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import check_password_hash
-from app.models import db, User, ServiceRequest, ServicePricing, PasswordResetToken, Payment, CustomerAccount
+# from werkzeug.security import check_password_hash # Unused in this file directly
+from app.models import (db, User, ServiceRequest, ServicePricing, PasswordResetToken, 
+                        Payment, CustomerAccount, BusinessExpense, ExpenseCategory, 
+                        TaxRecord, FinancialSummary)
 from app.security import (log_login_attempt, is_ip_rate_limited, # validate_password_strength removed
                          send_password_reset_email, send_email_verification, sanitize_input, is_safe_url)
 from app import limiter
@@ -609,7 +611,7 @@ def new_request():
                 # It might be better to return render_template here with form data preserved
                 # For now, let's assume valid input or rely on browser date picker.
                 # If an error occurs, it will be None and not saved.
-                pass
+                pass 
 
         service_request = ServiceRequest(
             title=title,
@@ -709,9 +711,9 @@ def profile():
         return redirect(url_for('admin.dashboard'))
     
     if request.method == 'POST':
-        current_user.first_name = request.form['first_name']
-        current_user.last_name = request.form['last_name']
-        current_user.email = request.form['email']
+        current_user.first_name = request.form.get('first_name')
+        current_user.last_name = request.form.get('last_name')
+        current_user.email = request.form.get('email')
         current_user.phone = request.form.get('phone', '')
         
         # Check if password is being updated
@@ -942,7 +944,7 @@ def financial_dashboard():
     
     from datetime import datetime, timedelta
     from calendar import monthrange
-    from app.models import FinancialSummary, TaxRecord, BusinessExpense
+    # from app.models import FinancialSummary, TaxRecord, BusinessExpense # Removed local import
     
     # Get current month data
     now = datetime.now()
@@ -1001,7 +1003,7 @@ def expense_management():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import BusinessExpense, ExpenseCategory
+    # from app.models import BusinessExpense, ExpenseCategory # Removed local import
     
     page = request.args.get('page', 1, type=int)
     category_filter = request.args.get('category', 'all')
@@ -1039,7 +1041,7 @@ def add_expense():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import BusinessExpense, ExpenseCategory
+    # from app.models import BusinessExpense, ExpenseCategory # Removed local import
     
     if request.method == 'POST':
         category_id = request.form.get('category_id', type=int)
@@ -1100,7 +1102,7 @@ def tax_management():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import TaxRecord
+    # from app.models import TaxRecord # Removed local import
     
     current_year = datetime.now().year
     
@@ -1139,7 +1141,7 @@ def recalculate_taxes():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import TaxRecord
+    # from app.models import TaxRecord # Removed local import
     
     current_year = datetime.now().year
     tax_records = TaxRecord.query.filter_by(tax_year=current_year).all()
@@ -1162,7 +1164,7 @@ def profit_loss_report():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import BusinessExpense
+    # from app.models import BusinessExpense # Removed local import
     
     # Get date range from request
     year = request.args.get('year', datetime.now().year, type=int)
@@ -1209,7 +1211,7 @@ def expense_categories():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import ExpenseCategory
+    # from app.models import ExpenseCategory # Removed local import
     
     categories = ExpenseCategory.query.order_by(ExpenseCategory.name).all()
     return render_template('admin/expense_categories.html', categories=categories)
@@ -1222,7 +1224,7 @@ def add_expense_category():
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import ExpenseCategory
+    # from app.models import ExpenseCategory # Removed local import
     
     name = request.form.get('name', '').strip()[:100] # Remove sanitize
     description = request.form.get('description', '').strip()[:500] # Remove sanitize
@@ -1255,7 +1257,7 @@ def edit_expense_category(category_id):
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import ExpenseCategory
+    # from app.models import ExpenseCategory # Removed local import
     
     category = ExpenseCategory.query.get_or_404(category_id)
     
@@ -1292,7 +1294,7 @@ def activate_expense_category(category_id):
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import ExpenseCategory
+    # from app.models import ExpenseCategory # Removed local import
     
     category = ExpenseCategory.query.get_or_404(category_id)
     category.is_active = True
@@ -1309,7 +1311,7 @@ def deactivate_expense_category(category_id):
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import ExpenseCategory
+    # from app.models import ExpenseCategory # Removed local import
     
     category = ExpenseCategory.query.get_or_404(category_id)
     category.is_active = False
@@ -1326,7 +1328,7 @@ def delete_expense(expense_id):
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import BusinessExpense
+    # from app.models import BusinessExpense # Removed local import
     
     expense = BusinessExpense.query.get_or_404(expense_id)
     description = expense.description
@@ -1345,7 +1347,7 @@ def mark_tax_paid(record_id):
         flash('Access denied. Admin privileges required.', 'danger')
         return redirect(url_for('main.index'))
     
-    from app.models import TaxRecord
+    # from app.models import TaxRecord # Removed local import
     
     record = TaxRecord.query.get_or_404(record_id)
     
