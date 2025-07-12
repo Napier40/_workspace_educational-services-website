@@ -146,7 +146,7 @@
                                 {% for expense in expenses.items %}
                                 <tr>
                                     <td>
-                                        <span class="fw-medium">{{ expense.get_formatted_date() }}</span>
+                                        <span class="fw-medium">{{ moment(expense.expense_date).format('YYYY-MM-DD') }}</span>
                                     </td>
                                     <td>
                                         <div class="fw-medium">{{ expense.description }}</div>
@@ -177,7 +177,7 @@
                                         <small class="text-muted">
                                             {{ expense.created_by.first_name }} {{ expense.created_by.last_name }}
                                             <br>
-                                            {{ expense.created_at.strftime('%m/%d/%Y') }}
+                                            {{ moment(expense.created_at).format('L') }}
                                         </small>
                                     </td>
                                     <td>
