@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Page Not Found') }} - {{ super() }}{% endblock %}
+
+{% block page_content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-1">{{ _('404') }}</h1>
+            <h2>{{ _('Oops! Page Not Found.') }}</h2>
+            <p class="lead">
+                {{ _("Sorry, the page you are looking for doesn't exist or has been moved.") }}
+            </p>
+            <hr class="my-4">
+            <p>
+                {{ _('You can go back to the homepage or contact support if you believe this is an error.') }}
+            </p>
+            <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg">{{ _('Go to Homepage') }}</a>
+            {# Example: Add a contact link if you have one #}
+            {# <a href="{{ url_for('main.contact') }}" class="btn btn-secondary btn-lg">{{ _('Contact Support') }}</a> #}
+        </div>
+    </div>
+</div>
+{% endblock %}

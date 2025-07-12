@@ -6,6 +6,9 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///educational_service.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PERMANENT_SESSION_LIFETIME = timedelta(hours=2)
+
+    # Debug mode setting
+    DEBUG = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
     
     # Security Configuration
     WTF_CSRF_ENABLED = True
@@ -36,13 +39,14 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'noreply@eduservices.com'
     
-    # Admin credentials (remove in production)
-    ADMIN_USERS = {
-        'john': 'Johnston',
-        'kamila': 'Johnston'
-    }
-    
     # Internationalization Configuration
     LANGUAGES = ['en', 'pl']
     BABEL_DEFAULT_LOCALE = 'en'
     BABEL_DEFAULT_TIMEZONE = 'UTC'
+
+    # Logging Configuration
+    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
+    LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', 'logs/app.log') # Default path
+    # For RotatingFileHandler
+    LOG_MAX_BYTES = int(os.environ.get('LOG_MAX_BYTES', 1024 * 1024 * 10)) # 10 MB
+    LOG_BACKUP_COUNT = int(os.environ.get('LOG_BACKUP_COUNT', 5))
