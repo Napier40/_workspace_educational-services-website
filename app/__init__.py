@@ -135,7 +135,7 @@ def create_app(config_class=Config):
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(customer_bp, url_prefix='/customer')
     
-    # Create database tables
+    # Create database tables and default users
     with app.app_context():
         db.create_all()
 
@@ -177,5 +177,21 @@ def create_app(config_class=Config):
                 db.session.add(admin_user)
         
         db.session.commit()
+
+    # Error handlers
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return render_template('errors/403.html'), 403
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        # Important: rollback the session in case of a DB error that caused the 500
+        # This prevents the session from remaining in a broken state.
+        db.session.rollback()
+        return render_template('errors/500.html'), 500
     
     return app
