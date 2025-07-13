@@ -153,7 +153,7 @@ def sanitize_input(input_string, max_length=None):
         return ""
     
     # Remove potentially dangerous characters
-    sanitized = re.sub(r'[<>"\']', '', str(input_string))
+    sanitized = re.sub(r'(<script(?:\s[^>]*)?>)(.*?)(</script>)', '', str(input_string))
     
     # Limit length if specified
     if max_length:
@@ -175,4 +175,4 @@ def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(target)
     
-    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+    return test_url.scheme in ('http', 'https') and ref_url.hostname == test_url.hostname

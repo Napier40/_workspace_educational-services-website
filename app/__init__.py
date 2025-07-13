@@ -125,6 +125,8 @@ def create_app(config_class=Config):
     with app.app_context():
         db.create_all()
         # Admin user seeding is now handled by the 'flask seed' CLI command
+        from .cli import seed_database
+        seed_database()
 
     # Register CLI commands
     from . import cli
