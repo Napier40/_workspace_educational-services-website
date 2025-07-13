@@ -2,7 +2,7 @@ from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import func # Removed unused 'and_', 'or_'
 import secrets
 import re
@@ -18,14 +18,14 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     phone = db.Column(db.String(20))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     is_active = db.Column(db.Boolean, default=True)
     
     # Security fields
     failed_login_attempts = db.Column(db.Integer, default=0)
     account_locked_until = db.Column(db.DateTime)
     last_login = db.Column(db.DateTime)
-    password_changed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    password_changed_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     email_verified = db.Column(db.Boolean, default=False)
     email_verification_token = db.Column(db.String(100))
     
@@ -60,12 +60,12 @@ class User(UserMixin, db.Model):
     def is_account_locked(self):
         """Check if account is currently locked"""
         if self.account_locked_until:
-            return datetime.utcnow() < self.account_locked_until
+            return datetime.now(timezone.utc) < self.account_locked_until
         return False
     
     def lock_account(self, duration_minutes=30):
         """Lock account for specified duration"""
-        self.account_locked_until = datetime.utcnow() + timedelta(minutes=duration_minutes)
+        self.account_locked_until = datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)
         self.failed_login_attempts = 0
     
     def unlock_account(self):
@@ -82,7 +82,7 @@ class User(UserMixin, db.Model):
     def reset_failed_login(self):
         """Reset failed login attempts on successful login"""
         self.failed_login_attempts = 0
-        self.last_login = datetime.utcnow()
+        self.last_login = datetime.now(timezone.utc)
     
     @staticmethod
     def validate_password_strength(password):
@@ -190,8 +190,8 @@ class ServiceRequest(db.Model):
     status = db.Column(db.String(20), default='pending')  # 'pending', 'in_progress', 'completed', 'cancelled'
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     assigned_admin_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     # due_date = db.Column(db.DateTime) # Removed as unused and superseded by new deadline fields
     notes = db.Column(db.Text)
     
@@ -254,7 +254,7 @@ class ServiceRequest(db.Model):
     def is_estimated_time_overdue(self):
         """Check if estimated time is overdue"""
         if self.response_deadline and self.status in ['pending', 'in_progress']:
-            return datetime.utcnow() > self.response_deadline
+            return datetime.now(timezone.utc) > self.response_deadline
         return False
     
     def get_priority_score(self):
@@ -276,7 +276,7 @@ class ServiceRequest(db.Model):
         
         # Older requests get higher priority
         if self.created_at:
-            days_old = (datetime.utcnow() - self.created_at).days
+            days_old = (datetime.now(timezone.utc) - self.created_at).days
             score += min(days_old * 10, 200)  # Cap at 200 points
         
         # Total price priority (higher cost = higher priority)
@@ -295,7 +295,7 @@ class ServiceRequest(db.Model):
     def get_income_report(cls, period='monthly', year=None, month=None):
         """Get income report for specified period"""
         if not year:
-            year = datetime.utcnow().year
+            year = datetime.now(timezone.utc).year
         
         if period == 'weekly':
             # Group by week
@@ -461,8 +461,8 @@ class ServicePricing(db.Model):
     display_order = db.Column(db.Integer, default=0)  # Order of display
     button_text = db.Column(db.String(50), default='Get Started')  # Button text
     button_link = db.Column(db.String(100))  # Custom button link (optional)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     def get_features_list(self):
         """Return features as a list. Expects features to be a valid JSON string."""
@@ -492,7 +492,7 @@ class PasswordResetToken(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     token = db.Column(db.String(100), nullable=False, unique=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     expires_at = db.Column(db.DateTime, nullable=False)
     used = db.Column(db.Boolean, default=False)
     
@@ -502,11 +502,11 @@ class PasswordResetToken(db.Model):
     def __init__(self, user_id, expiry_hours=1):
         self.user_id = user_id
         self.token = secrets.token_urlsafe(32)
-        self.expires_at = datetime.utcnow() + timedelta(hours=expiry_hours)
+        self.expires_at = datetime.now(timezone.utc) + timedelta(hours=expiry_hours)
     
     def is_valid(self):
         """Check if token is valid (not expired and not used)"""
-        return not self.used and datetime.utcnow() < self.expires_at
+        return not self.used and datetime.now(timezone.utc) < self.expires_at
     
     def use_token(self):
         """Mark token as used"""
@@ -516,7 +516,7 @@ class PasswordResetToken(db.Model):
     def cleanup_expired_tokens():
         """Remove expired tokens from database"""
         expired_tokens = PasswordResetToken.query.filter(
-            PasswordResetToken.expires_at < datetime.utcnow()
+            PasswordResetToken.expires_at < datetime.now(timezone.utc)
         ).all()
         for token in expired_tokens:
             db.session.delete(token)
@@ -533,7 +533,7 @@ class LoginAttempt(db.Model):
     ip_address = db.Column(db.String(45), nullable=False)  # IPv6 compatible
     username = db.Column(db.String(80))
     success = db.Column(db.Boolean, nullable=False)
-    attempted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    attempted_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     user_agent = db.Column(db.String(500))
     
     @staticmethod
@@ -552,7 +552,7 @@ class LoginAttempt(db.Model):
     @staticmethod
     def get_recent_failed_attempts(ip_address, minutes=15):
         """Get recent failed attempts from IP"""
-        since = datetime.utcnow() - timedelta(minutes=minutes)
+        since = datetime.now(timezone.utc) - timedelta(minutes=minutes)
         return LoginAttempt.query.filter(
             LoginAttempt.ip_address == ip_address,
             LoginAttempt.success == False,
@@ -572,7 +572,7 @@ class Payment(db.Model):
     payment_method = db.Column(db.String(50), nullable=False)  # 'credit_card', 'bank_transfer', 'paypal', 'cash', 'check'
     payment_reference = db.Column(db.String(200))  # Transaction ID, check number, etc.
     status = db.Column(db.String(20), default='pending')  # 'pending', 'approved', 'rejected'
-    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    submitted_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     processed_at = db.Column(db.DateTime)
     processed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     admin_notes = db.Column(db.Text)
@@ -586,7 +586,7 @@ class Payment(db.Model):
     def approve_payment(self, admin_user, notes=None):
         """Approve the payment"""
         self.status = 'approved'
-        self.processed_at = datetime.utcnow()
+        self.processed_at = datetime.now(timezone.utc)
         self.processed_by_id = admin_user.id
         if notes:
             self.admin_notes = notes
@@ -594,7 +594,7 @@ class Payment(db.Model):
     def reject_payment(self, admin_user, notes=None):
         """Reject the payment"""
         self.status = 'rejected'
-        self.processed_at = datetime.utcnow()
+        self.processed_at = datetime.now(timezone.utc)
         self.processed_by_id = admin_user.id
         if notes:
             self.admin_notes = notes
@@ -647,7 +647,7 @@ class CustomerAccount(db.Model):
     total_paid = db.Column(db.Float, default=0.0)    # Total amount paid by customer
     outstanding_balance = db.Column(db.Float, default=0.0)  # Amount still owed
     last_payment_date = db.Column(db.DateTime)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationship
     customer = db.relationship('User', backref=db.backref('account', uselist=False))
@@ -717,7 +717,7 @@ class ExpenseCategory(db.Model):
     description = db.Column(db.Text)
     is_tax_deductible = db.Column(db.Boolean, default=True)
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     # Relationship
     expenses = db.relationship('BusinessExpense', backref='category', lazy=True)
@@ -743,8 +743,8 @@ class BusinessExpense(db.Model):
     receipt_filename = db.Column(db.String(255))  # For receipt storage
     is_tax_deductible = db.Column(db.Boolean, default=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
     created_by = db.relationship('User', backref='expenses_created')
@@ -812,7 +812,7 @@ class TaxRecord(db.Model):
     payment_date = db.Column(db.Date)
     
     # Metadata
-    calculated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    calculated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     calculated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     notes = db.Column(db.Text)
     
@@ -868,7 +868,7 @@ class TaxRecord(db.Model):
     def is_overdue(self):
         """Check if tax payment is overdue"""
         if self.due_date and self.status == 'pending':
-            return datetime.now().date() > self.due_date
+            return datetime.now(timezone.utc).date() > self.due_date
         return False
     
     @classmethod
@@ -927,7 +927,7 @@ class FinancialSummary(db.Model):
     expense_ratio = db.Column(db.Float, default=0.0)  # Expenses/Income ratio
     
     # Metadata
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     def calculate_summary(self):
         """Calculate financial summary for the month"""
