@@ -7,7 +7,7 @@ from app.models import (db, User, ServiceRequest, ServicePricing, PasswordResetT
 from app.security import (log_login_attempt, is_ip_rate_limited, # validate_password_strength removed
                          send_password_reset_email, send_email_verification, sanitize_input, is_safe_url)
 from app import limiter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 import json
 import csv
@@ -257,7 +257,7 @@ def reset_password(token):
         # Update password
         user = reset_token.user
         user.set_password(password)
-        user.password_changed_at = datetime.utcnow()
+        user.password_changed_at = datetime.now(timezone.utc)
         user.unlock_account()  # Unlock account if it was locked
         
         # Mark token as used
@@ -350,7 +350,6 @@ def update_request(id):
     service_request.priority = request.form['priority']
     service_request.notes = request.form.get('notes', '')
     service_request.assigned_admin_id = current_user.id
-    service_request.updated_at = datetime.utcnow()
     
     # Handle pricing updates
     estimated_hours = request.form.get('estimated_hours')
@@ -411,8 +410,8 @@ def customers():
         page=page, per_page=10, error_out=False)
     
     # These are used by the template for "New This Month" card
-    current_month = datetime.utcnow().month
-    current_year = datetime.utcnow().year
+    current_month = datetime.now(timezone.utc).month
+    current_year = datetime.now(timezone.utc).year
     
     return render_template('admin/customers.html', 
                          customers=customers,
@@ -460,8 +459,6 @@ def edit_service_pricing(id):
             pricing.set_features_list(features_list)
         else:
             pricing.features = None
-        
-        pricing.updated_at = datetime.utcnow()
         
         try:
             db.session.commit()
@@ -742,7 +739,7 @@ def approve_pricing(id):
     
     service_request = ServiceRequest.query.filter_by(id=id, customer_id=current_user.id).first_or_404()
     service_request.pricing_approved = True
-    service_request.updated_at = datetime.utcnow()
+    service_request.updated_at = datetime.now(timezone.utc)
     
     db.session.commit()
     flash('Pricing approved successfully!', 'success')
@@ -785,7 +782,7 @@ def income_report():
         return redirect(url_for('main.index'))
     
     period = request.args.get('period', 'monthly')
-    year = request.args.get('year', datetime.utcnow().year, type=int)
+    year = request.args.get('year', datetime.now(timezone.utc).year, type=int)
     
     income_data = ServiceRequest.get_income_report(period=period, year=year)
     
@@ -886,7 +883,7 @@ def export_report(report_type):
     
     elif report_type == 'income':
         period = request.args.get('period', 'monthly')
-        year = request.args.get('year', datetime.utcnow().year, type=int)
+        year = request.args.get('year', datetime.now(timezone.utc).year, type=int)
         writer.writerow(['Period', 'Total Income', 'Request Count'])
         income_data = ServiceRequest.get_income_report(period=period, year=year)
         for item in income_data:
@@ -925,7 +922,7 @@ def export_report(report_type):
     output.seek(0)
     response = make_response(output.getvalue())
     response.headers['Content-Type'] = 'text/csv'
-    response.headers['Content-Disposition'] = f'attachment; filename={report_type}_report_{datetime.now().strftime("%Y%m%d")}.csv'
+    response.headers['Content-Disposition'] = f'attachment; filename={report_type}_report_{datetime.now(timezone.utc).strftime("%Y%m%d")}.csv'
     
     return response
 
@@ -1143,12 +1140,12 @@ def recalculate_taxes():
     
     # from app.models import TaxRecord # Removed local import
     
-    current_year = datetime.now().year
+    current_year = datetime.now(timezone.utc).year
     tax_records = TaxRecord.query.filter_by(tax_year=current_year).all()
     
     for record in tax_records:
         record.calculate_taxes()
-        record.calculated_at = datetime.utcnow()
+        record.calculated_at = datetime.now(timezone.utc)
         record.calculated_by_id = current_user.id
     
     db.session.commit()
