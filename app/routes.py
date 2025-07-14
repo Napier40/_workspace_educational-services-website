@@ -654,7 +654,7 @@ def new_request():
                     uploaded_by_id=current_user.id
                 )
                 db.session.add(file_upload)
-
+        
         db.session.commit()
         
         flash('Service request submitted successfully!', 'success')
