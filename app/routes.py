@@ -1,12 +1,14 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response, jsonify, current_app
+import os
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response, jsonify, current_app, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.utils import secure_filename
 # from werkzeug.security import check_password_hash # Unused in this file directly
 from app.models import (db, User, ServiceRequest, ServicePricing, PasswordResetToken, 
                         Payment, CustomerAccount, BusinessExpense, ExpenseCategory, 
-                        TaxRecord, FinancialSummary)
+                        TaxRecord, FinancialSummary, FileUpload, Notification)
 from app.security import (log_login_attempt, is_ip_rate_limited, # validate_password_strength removed
                          send_password_reset_email, send_email_verification, sanitize_input, is_safe_url)
-from app import limiter
+from app import limiter, socketio
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 import json
@@ -53,6 +55,23 @@ def test_translation():
         'current_locale': session.get('language', 'en')
     }
     return f"<h1>Translation Test</h1><pre>{test_strings}</pre>"
+
+@main_bp.route('/uploads/<filename>')
+@login_required
+def download_file(filename):
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+@main_bp.route('/notifications')
+@login_required
+def notifications():
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    return jsonify([{
+        'id': n.id,
+        'message': n.message,
+        'is_read': n.is_read,
+        'created_at': n.created_at.isoformat(),
+        'service_request_id': n.service_request_id
+    } for n in notifications])
 
 # Authentication routes
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -620,6 +639,22 @@ def new_request():
         )
         
         db.session.add(service_request)
+        db.session.commit()
+
+        files = request.files.getlist('files')
+        for file in files:
+            if file:
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                file_upload = FileUpload(
+                    filename=filename,
+                    filepath=filepath,
+                    service_request_id=service_request.id,
+                    uploaded_by_id=current_user.id
+                )
+                db.session.add(file_upload)
+
         db.session.commit()
         
         flash('Service request submitted successfully!', 'success')
@@ -1617,3 +1652,30 @@ def customer_account_detail(customer_id):
                          account=account,
                          payments=payments,
                          service_requests=service_requests)
+
+@admin_bp.route('/send_notification/<int:user_id>', methods=['POST'])
+@login_required
+def send_notification(user_id):
+    if not current_user.is_admin():
+        flash('Access denied. Admin privileges required.', 'danger')
+        return redirect(url_for('main.index'))
+
+    message = request.form.get('message')
+    service_request_id = request.form.get('service_request_id')
+
+    if not message:
+        flash('Message cannot be empty', 'danger')
+        return redirect(request.referrer)
+
+    notification = Notification(
+        message=message,
+        user_id=user_id,
+        service_request_id=service_request_id
+    )
+    db.session.add(notification)
+    db.session.commit()
+
+    socketio.emit('new_notification', {'message': message}, room=str(user_id))
+
+    flash('Notification sent successfully!', 'success')
+    return redirect(request.referrer)

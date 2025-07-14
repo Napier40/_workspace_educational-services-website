@@ -14,12 +14,14 @@ from flask_babel import Babel, gettext, ngettext, _
 from markupsafe import Markup
 from app.config import Config
 from app.models import db
+from flask_socketio import SocketIO
 
 login_manager = LoginManager()
 csrf = CSRFProtect()
 mail = Mail()
 moment = Moment()
 babel = Babel()
+socketio = SocketIO()
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"]
@@ -59,6 +61,7 @@ def create_app(config_class=Config):
     mail.init_app(app)
     moment.init_app(app)
     limiter.init_app(app)
+    socketio.init_app(app)
     
     login_manager.init_app(app)
     
@@ -125,6 +128,8 @@ def create_app(config_class=Config):
     with app.app_context():
         db.create_all()
         # Admin user seeding is now handled by the 'flask seed' CLI command
+        from .cli import seed_database
+        seed_database()
 
     # Register CLI commands
     from . import cli
