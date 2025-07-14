@@ -1,3 +1,5 @@
+models.py
+
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -890,6 +892,23 @@ class TaxRecord(db.Model):
             db.session.commit()
         
         return record
+
+
+class Notification(db.Model):
+    """Model for storing user notifications"""
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    service_request_id = db.Column(db.Integer, db.ForeignKey('service_request.id'), nullable=True)
+
+    # Relationships
+    user = db.relationship('User', backref='notifications')
+    service_request = db.relationship('ServiceRequest', backref='notifications')
+
+    def __repr__(self):
+        return f'<Notification {self.id}>'
 
 
 class FileUpload(db.Model):
