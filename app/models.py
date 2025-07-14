@@ -1,9 +1,10 @@
 from flask import current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import func # Removed unused 'and_', 'or_'
+from sqlalchemy import func, case, desc # Removed unused 'and_', 'or_'
 import secrets
 import re
 
@@ -37,10 +38,16 @@ class User(UserMixin, db.Model):
     selected_plan = db.relationship('ServicePricing', backref='customers', lazy=True)
     
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        ph = PasswordHasher()
+        self.password_hash = ph.hash(password)
     
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        ph = PasswordHasher()
+        try:
+            ph.verify(self.password_hash, password)
+            return True
+        except VerifyMismatchError:
+            return False
     
     def is_admin(self):
         return self.role == 'admin'
@@ -129,34 +136,11 @@ class User(UserMixin, db.Model):
     @classmethod
     def get_top_customers_by_conversions(cls, limit=10):
         """Get top customers by conversion rate (completed/total requests)"""
-        customers = cls.query.filter(cls.role == 'customer').all()
-        customer_stats = []
-        
-        for customer in customers:
-            # Use len() instead of count() since service_requests is a list
-            total_requests = len(customer.service_requests)
-            if total_requests > 0:
-                # Filter completed requests using list comprehension
-                completed_requests = len([req for req in customer.service_requests if req.status == 'completed'])
-                conversion_rate = (completed_requests / total_requests) * 100
-                
-                total_value = db.session.query(func.sum(ServiceRequest.total_price)).filter(
-                    ServiceRequest.customer_id == customer.id,
-                    ServiceRequest.status == 'completed',
-                    ServiceRequest.total_price > 0
-                ).scalar() or 0
-                
-                customer_stats.append({
-                    'customer': customer,
-                    'total_requests': total_requests,
-                    'completed_requests': completed_requests,
-                    'conversion_rate': conversion_rate,
-                    'total_value': total_value
-                })
-        
-        # Sort by conversion rate, then by total value
-        customer_stats.sort(key=lambda x: (x['conversion_rate'], x['total_value']), reverse=True)
-        return customer_stats[:limit]
+        return db.session.query(
+            cls,
+            (func.sum(case((ServiceRequest.status == 'completed', 1), else_=0)) / func.count(ServiceRequest.id) * 100).label('conversion_rate'),
+            func.sum(case((ServiceRequest.status == 'completed', ServiceRequest.total_price), else_=0)).label('total_value')
+        ).join(ServiceRequest).filter(cls.role == 'customer').group_by(cls.id).order_by(desc('conversion_rate'), desc('total_value')).limit(limit).all()
     
     @classmethod
     def get_top_customers_by_requests(cls, limit=10):
@@ -179,7 +163,7 @@ class User(UserMixin, db.Model):
         return customers
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self.id}>'
 
 class ServiceRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -524,7 +508,7 @@ class PasswordResetToken(db.Model):
         return len(expired_tokens)
     
     def __repr__(self):
-        return f'<PasswordResetToken {self.token[:8]}...>'
+        return f'<PasswordResetToken for user {self.user_id}>'
 
 
 class LoginAttempt(db.Model):

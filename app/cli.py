@@ -2,9 +2,8 @@ import click
 from flask.cli import with_appcontext
 from .models import db, User
 
-@click.command('seed')
-@with_appcontext
-def seed_command():
+
+def seed_database():
     """Seeds the database with initial data, like default admin users."""
 
     # Create default admin users if they don't exist
@@ -33,6 +32,13 @@ def seed_command():
 
     db.session.commit()
     click.echo("✅ Admin users seeded successfully.")
+
+
+@click.command('seed')
+@with_appcontext
+def seed_command():
+    """Seeds the database with initial data, like default admin users."""
+    seed_database()
 
 def init_app(app):
     """Register CLI commands with the Flask app."""
