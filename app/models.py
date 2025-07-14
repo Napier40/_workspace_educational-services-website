@@ -892,6 +892,23 @@ class TaxRecord(db.Model):
         return record
 
 
+class FileUpload(db.Model):
+    """Model for storing uploaded files"""
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    filepath = db.Column(db.String(512), nullable=False)
+    service_request_id = db.Column(db.Integer, db.ForeignKey('service_request.id'), nullable=False)
+    uploaded_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    service_request = db.relationship('ServiceRequest', backref='uploads')
+    uploaded_by = db.relationship('User', backref='uploads')
+
+    def __repr__(self):
+        return f'<FileUpload {self.filename}>'
+
+
 class FinancialSummary(db.Model):
     """Monthly financial summary for quick dashboard access"""
     __tablename__ = 'financial_summary'

@@ -1,9 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response, jsonify, current_app
+import os
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response, jsonify, current_app, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
+from werkzeug.utils import secure_filename
 # from werkzeug.security import check_password_hash # Unused in this file directly
 from app.models import (db, User, ServiceRequest, ServicePricing, PasswordResetToken, 
                         Payment, CustomerAccount, BusinessExpense, ExpenseCategory, 
-                        TaxRecord, FinancialSummary)
+                        TaxRecord, FinancialSummary, FileUpload)
 from app.security import (log_login_attempt, is_ip_rate_limited, # validate_password_strength removed
                          send_password_reset_email, send_email_verification, sanitize_input, is_safe_url)
 from app import limiter
@@ -53,6 +55,11 @@ def test_translation():
         'current_locale': session.get('language', 'en')
     }
     return f"<h1>Translation Test</h1><pre>{test_strings}</pre>"
+
+@main_bp.route('/uploads/<filename>')
+@login_required
+def download_file(filename):
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
 
 # Authentication routes
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -620,6 +627,22 @@ def new_request():
         )
         
         db.session.add(service_request)
+        db.session.commit()
+
+        files = request.files.getlist('files')
+        for file in files:
+            if file:
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                file_upload = FileUpload(
+                    filename=filename,
+                    filepath=filepath,
+                    service_request_id=service_request.id,
+                    uploaded_by_id=current_user.id
+                )
+                db.session.add(file_upload)
+
         db.session.commit()
         
         flash('Service request submitted successfully!', 'success')

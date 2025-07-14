@@ -24,7 +24,7 @@
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="mb-4">
                             <label for="title" class="form-label">Request Title <span class="text-danger">*</span></label>
@@ -129,6 +129,14 @@
                             </div>
                         </div>
                         
+                        <div class="mb-4">
+                            <label for="files" class="form-label">Attachments</label>
+                            <input class="form-control" type="file" id="files" name="files" multiple>
+                            <div class="form-text">
+                                You can upload multiple files.
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-between">
                             <a href="{{ url_for('customer.dashboard') }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
